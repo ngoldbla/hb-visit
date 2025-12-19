@@ -1,7 +1,7 @@
 const fs = require('fs')
 const homefile = './homepage_config.json'
 var homeConfig = require(homefile)
-const config = require('../config.json')
+const config = require('../config')
 const jwt = require('jsonwebtoken')
 
 module.exports = function(app,io){

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
 const Guard = mongoose.model('guard')
-const config = require('../config.json')
+const config = require('../config')
 
 module.exports = function(app,io){
     

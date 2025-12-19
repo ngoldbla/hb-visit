@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
-var url = "mongodb+srv://admin:admin@vms-3d0he.mongodb.net/VMS?retryWrites=true&w=majority"
+const url = process.env.MONGODB_URI || "mongodb+srv://admin:admin@vms-3d0he.mongodb.net/VMS?retryWrites=true&w=majority";
 
-mongoose.connect(url,{useNewUrlParser:true, useUnifiedTopology:true, useFindAndModify: false, useCreateIndex: true }, (err)=>{
+mongoose.connect(url, {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false, useCreateIndex: true}, (err) => {
     if(!err){
         console.log("Database connected...");
     }else{

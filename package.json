@@ -1,7 +1,7 @@
 {
-  "name": "vms",
+  "name": "hatchbridge-visit",
   "version": "1.0.0",
-  "description": "",
+  "description": "Hatchbridge Visitor Management System - Kiosk App",
   "main": "index.js",
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -30,6 +30,6 @@
   "author": "",
   "license": "ISC",
   "engines": {
-    "node": "12.13.0"
+    "node": "20.x"
   }
 }
