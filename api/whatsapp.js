@@ -3,11 +3,22 @@ const path = require('path')
 
 module.exports = async function (app, io) {
 
-	const browser = await puppet.launch({
-		args: ['--no-sandbox', '--disable-web-security'],
-		headless: false,
+	// Use headless mode in production/cloud environments
+	const isProduction = process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT;
+	const headlessMode = isProduction ? 'new' : false;
+
+	const launchOptions = {
+		args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security', '--disable-dev-shm-usage'],
+		headless: headlessMode,
 		userDataDir: process.cwd() + '/whatsappData'
-	});
+	};
+
+	// Use system Chromium if available (set by nixpacks.toml)
+	if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+		launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+	}
+
+	const browser = await puppet.launch(launchOptions);
 
 	const page = await browser.newPage()
 	await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36');
