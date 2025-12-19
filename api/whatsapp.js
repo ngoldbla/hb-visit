@@ -1,7 +1,14 @@
-const puppet = require('puppeteer')
 const path = require('path')
 
 module.exports = async function (app, io) {
+	// Double-check that WhatsApp is enabled before trying to load puppeteer
+	if (process.env.ENABLE_WHATSAPP !== 'true') {
+		console.log('WhatsApp module skipped (ENABLE_WHATSAPP is not true)')
+		return
+	}
+
+	// Dynamically require puppeteer only when needed
+	const puppet = require('puppeteer')
 
 	// Use headless mode in production/cloud environments
 	const isProduction = process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT;
