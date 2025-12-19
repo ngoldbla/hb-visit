@@ -3,7 +3,7 @@ const Visitor = mongoose.model('visitor')
 const Admin = mongoose.model('admin')
 const Guard = mongoose.model('guard')
 const jwt = require('jsonwebtoken')
-const config = require('../config.json')
+const config = require('../config')
 
 module.exports = function (app, io) {
 

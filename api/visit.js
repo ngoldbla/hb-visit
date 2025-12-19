@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const Visit = mongoose.model('visit')
 const jwt = require('jsonwebtoken')
-const config = require('../config.json')
+const config = require('../config')
 
 module.exports = function(app,io){
     app.get('/api/visits/list', (req,res)=>{
