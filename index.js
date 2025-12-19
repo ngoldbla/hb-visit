@@ -17,7 +17,7 @@ var server = app.listen(PORT, ()=>{
 
 var io = socket(server)
 
-require('./api')(app,io)
+require('./api')(app,io).catch(err => console.error('API initialization error:', err))
 
 app.use(express.static(path.join(__dirname, 'public')))
 
