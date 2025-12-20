@@ -1,0 +1,213 @@
+@font-face {
+  font-family: "Nunitosans 7 Pt";
+  src: url("assets/branding/fonts/NunitoSans_7pt-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Nunitosans 7 Pt";
+  src: url("assets/branding/fonts/NunitoSans_7pt-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Nunitosans 7 Pt";
+  src: url("assets/branding/fonts/NunitoSans_7pt-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Nunitosans 7 Pt";
+  src: url("assets/branding/fonts/NunitoSans_7pt-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Nunitosans 7 Pt";
+  src: url("assets/branding/fonts/NunitoSans_7pt-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Jetbrainsmono Variablefont Wght";
+  src: url("assets/branding/fonts/JetBrainsMono-VariableFont_wght.ttf")
+    format("truetype");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --hb-dark-blue: #000824;
+  --hb-accent-blue: #2153ff;
+  --hb-brand-yellow: #ffc421;
+  --hb-brand-yellow-hover: #ffa100;
+  --hb-bg: #fff9e9;
+  --hb-bg-soft: #fff3d3;
+  --hb-white: #ffffff;
+  --hb-black: #000000;
+  --hb-border: rgba(0, 8, 36, 0.12);
+  --hb-font-sans: "Nunitosans 7 Pt", system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --hb-font-mono: "Jetbrainsmono Variablefont Wght", ui-monospace,
+    SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+  --hb-radius: 16px;
+  --hb-radius-pill: 9999px;
+}
+
+html,
+body {
+  font-family: var(--hb-font-sans);
+  background-color: var(--hb-bg);
+  color: var(--hb-dark-blue);
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--hb-font-mono);
+}
+
+a {
+  color: var(--hb-accent-blue);
+}
+
+a:hover {
+  color: var(--hb-accent-blue);
+  opacity: 0.85;
+}
+
+/* App loading screen (until Angular hydrates app-root) */
+app-root:empty {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--hb-bg);
+}
+
+app-root:empty::before {
+  content: "";
+  width: 220px;
+  height: 48px;
+  background: url("assets/branding/hatchbridge-siteid.svg") center / contain
+    no-repeat;
+}
+
+/* Bootstrap 4 theme overrides */
+.btn {
+  border-radius: var(--hb-radius-pill);
+  font-weight: 500;
+}
+
+.btn-primary {
+  background-color: var(--hb-brand-yellow);
+  border-color: var(--hb-brand-yellow);
+  color: var(--hb-black);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: var(--hb-brand-yellow-hover);
+  border-color: var(--hb-brand-yellow-hover);
+  color: var(--hb-black);
+}
+
+.btn-primary:focus,
+.btn-primary.focus {
+  box-shadow: 0 0 0 0.2rem rgba(255, 196, 33, 0.35);
+}
+
+.btn-outline-primary {
+  color: var(--hb-dark-blue);
+  border-color: var(--hb-dark-blue);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+  background-color: var(--hb-dark-blue);
+  border-color: var(--hb-dark-blue);
+  color: var(--hb-white);
+}
+
+.btn-outline-primary:focus,
+.btn-outline-primary.focus {
+  box-shadow: 0 0 0 0.2rem rgba(0, 8, 36, 0.2);
+}
+
+.bg-primary {
+  background-color: var(--hb-dark-blue) !important;
+}
+
+.text-primary {
+  color: var(--hb-accent-blue) !important;
+}
+
+.badge-primary {
+  background-color: var(--hb-brand-yellow) !important;
+  color: var(--hb-black) !important;
+}
+
+.alert-primary {
+  background-color: var(--hb-bg-soft);
+  border-color: var(--hb-brand-yellow);
+  color: var(--hb-dark-blue);
+}
+
+.card,
+.modal-content {
+  border-radius: var(--hb-radius);
+  border-color: var(--hb-border);
+}
+
+.form-control {
+  border-radius: var(--hb-radius);
+  border-color: var(--hb-border);
+}
+
+.form-control:focus {
+  border-color: var(--hb-accent-blue);
+  box-shadow: 0 0 0 0.2rem rgba(33, 83, 255, 0.18);
+}
+
+.hb-home {
+  max-width: 560px;
+  padding: 2.5rem 2rem;
+  border-radius: var(--hb-radius);
+  border: 1px solid var(--hb-border);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(8px);
+}
+
+.hb-home__logo {
+  width: 220px;
+  height: auto;
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+.hb-home__headline {
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+  color: var(--hb-dark-blue);
+}
+
+.hb-home__copy {
+  margin: 0;
+  font-size: 1.1rem;
+  color: rgba(0, 8, 36, 0.85);
+}
