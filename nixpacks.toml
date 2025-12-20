@@ -1,7 +1,6 @@
-[phases.setup]
-nixPkgs = ["chromium", "nss", "freetype", "harfbuzz", "ca-certificates", "fonts-liberation"]
-aptPkgs = ["libnss3", "libatk1.0-0", "libatk-bridge2.0-0", "libcups2", "libdrm2", "libxkbcommon0", "libxcomposite1", "libxdamage1", "libxrandr2", "libgbm1", "libasound2", "libpangocairo-1.0-0", "libgtk-3-0", "libxshmfence1", "libxtst6"]
+# WhatsApp/Puppeteer dependencies removed - they caused build failures due to invalid Nix package names
+# If WhatsApp is needed, set ENABLE_WHATSAPP=true and configure Chromium manually
+# The core visitor management functionality works without these dependencies
 
 [variables]
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
-PUPPETEER_EXECUTABLE_PATH = "/usr/bin/chromium"
