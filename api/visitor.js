@@ -10,7 +10,7 @@ module.exports = function (app, io) {
 	//getting list of visitors
 	app.get('/api/visitors/list', (req, res) => {
 		var decoded = jwt.verify(req.headers['authorization'], config.secret);
-		if(decoded.role=='Admin'){
+		if (decoded.role == 'Admin') {
 			Visitor.find({}).then((docs) => {
 				res.json({ status: true, docs })
 			}).catch((error) => {
@@ -44,7 +44,12 @@ module.exports = function (app, io) {
 					password: req.body.password ?? digits
 				})
 				visitor.save().then((doc) => {
-					res.json({ status: true, doc })
+					res.json({
+						status: true,
+						doc,
+						loginIdentifier: '+' + digits,
+						message: "Registration successful! Log in with your mobile number: +" + digits
+					})
 				}).catch((error) => {
 					res.json({ status: false, error })
 				})
@@ -67,7 +72,7 @@ module.exports = function (app, io) {
 
 	app.post('/api/visitors/delete', (req, res) => {
 		var decoded = jwt.verify(req.headers['authorization'], config.secret)
-		if(decoded.role=='Admin'){
+		if (decoded.role == 'Admin') {
 			Visitor.deleteOne({
 				_id: req.body.id
 			}).then((doc) => {
@@ -128,7 +133,7 @@ module.exports = function (app, io) {
 			Visit.updateOne({
 				"visitor._id": req.body.visitor._id,
 				"guard_out": null
-			},{
+			}, {
 				guard_out: req.body.guard,
 				gate_out: req.body.gate
 			}).then((doc) => {
