@@ -211,3 +211,51 @@ app-root:empty::before {
   font-size: 1.1rem;
   color: rgba(0, 8, 36, 0.85);
 }
+
+/* Auth screens (login/register) */
+app-login .container,
+app-register .container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+app-login .row,
+app-register .row {
+  flex: 1;
+  justify-content: center;
+}
+
+app-login .col-md-6.mt-5.mx-auto,
+app-register .col-md-6.mt-5.mx-auto {
+  margin-top: 0 !important;
+}
+
+app-login form,
+app-register form {
+  width: 100%;
+  max-width: 560px;
+  padding: 2.5rem 2rem;
+  border-radius: var(--hb-radius);
+  border: 1px solid var(--hb-border);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(8px);
+}
+
+app-login h1::before,
+app-register h1::before {
+  content: "";
+  display: block;
+  width: 220px;
+  height: 48px;
+  margin: 0 auto 1.5rem;
+  background: url("assets/branding/hatchbridge-siteid.svg") center / contain
+    no-repeat;
+}
+
+app-login h1,
+app-register h1 {
+  margin-bottom: 1.25rem;
+  font-weight: 600;
+  color: var(--hb-dark-blue);
+}
