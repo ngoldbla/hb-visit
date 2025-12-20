@@ -2,5 +2,9 @@
 # If WhatsApp is needed, set ENABLE_WHATSAPP=true and configure Chromium manually
 # The core visitor management functionality works without these dependencies
 
+[phases.install]
+cmds = ["PUPPETEER_SKIP_DOWNLOAD=true npm ci"]
+
 [variables]
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
+PUPPETEER_SKIP_DOWNLOAD = "true"
