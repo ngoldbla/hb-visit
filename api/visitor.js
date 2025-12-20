@@ -20,16 +20,28 @@ module.exports = function (app, io) {
 	});
 
 	app.post('/api/visitors/register', (req, res) => {
+		const rawMobile = req.body.number ?? req.body.registered_mob ?? req.body.mobile ?? req.body.phone
+		const digits = String(rawMobile ?? '').replace(/\D/g, '')
+		const mobile = digits ? Number(digits) : null
+
+		if (!mobile || Number.isNaN(mobile)) {
+			return res.json({ status: false, error: 'Mobile number is required.' })
+		}
+
+		if (digits.length < 7 || digits.length > 15) {
+			return res.json({ status: false, error: 'Mobile number must be 7–15 digits.' })
+		}
+
 		Visitor.find({
-			registered_mob: req.body.number
+			registered_mob: mobile
 		}).then((docs) => {
 			if (docs.length > 0) {
-				res.json({ status: false, error: "The number is already registered" })
+				res.json({ status: false, error: 'The number is already registered' })
 			} else {
-				var visitor = new Visitor({
-					registered_mob: req.body.number,
+				const visitor = new Visitor({
+					registered_mob: mobile,
 					name: req.body.name,
-					password: password
+					password: req.body.password ?? digits
 				})
 				visitor.save().then((doc) => {
 					res.json({ status: true, doc })
@@ -37,6 +49,8 @@ module.exports = function (app, io) {
 					res.json({ status: false, error })
 				})
 			}
+		}).catch((error) => {
+			res.json({ status: false, error })
 		})
 	})
 

@@ -94,12 +94,55 @@ module.exports = function (app, io) {
 	})
 
 	app.post('/api/auth/register', (req,res)=>{
-		var visitor = new Visitor(req.body)
-		visitor.save().then((doc)=>{
-			res.json({status: true, doc})
-		}).catch((error)=>{
-			res.json({status: false, message: "Internal Error"})
-		})
+		try{
+			if (mongoose.connection.readyState !== 1) {
+				return res.json({
+					status: false,
+					message: 'Database is not connected. Check MONGODB_URI.'
+				})
+			}
+
+			const rawMobile = req.body.registered_mob ?? req.body.number ?? req.body.mobile ?? req.body.phone
+			const digits = String(rawMobile ?? '').replace(/\D/g, '')
+			const mobile = digits ? Number(digits) : null
+
+			if (!mobile || Number.isNaN(mobile)) {
+				return res.json({ status: false, message: 'Mobile number is required.' })
+			}
+
+			if (digits.length < 7 || digits.length > 15) {
+				return res.json({ status: false, message: 'Mobile number must be 7–15 digits.' })
+			}
+
+			if (!req.body.password) {
+				return res.json({ status: false, message: 'Password is required.' })
+			}
+
+			Visitor.findOne({ registered_mob: mobile }).then((existing) => {
+				if (existing) {
+					return res.json({ status: false, message: 'That mobile number is already registered.' })
+				}
+
+				const visitor = new Visitor({
+					name: req.body.name,
+					registered_mob: mobile,
+					password: req.body.password
+				})
+
+				visitor.save().then((doc) => {
+					res.json({ status: true, doc })
+				}).catch((error) => {
+					console.error('Registration error:', error)
+					res.json({ status: false, message: 'Internal Error' })
+				})
+			}).catch((error) => {
+				console.error('Registration lookup error:', error)
+				res.json({ status: false, message: 'Internal Error' })
+			})
+		}catch(error){
+			console.error('Registration handler error:', error)
+			res.json({ status: false, message: 'Internal Error' })
+		}
 	})
 
 	app.get('/api/auth/refresh', (req, res) => {
