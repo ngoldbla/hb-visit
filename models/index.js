@@ -11,7 +11,6 @@ mongoose.connect(url, {useNewUrlParser: true, useUnifiedTopology: true, useFindA
 });
 
 require('./visitors')
-require('./conv_whatsapp')
 require('./visit')
 require('./admin')
 require('./guard')

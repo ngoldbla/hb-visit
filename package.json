@@ -11,19 +11,18 @@
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.27.0",
     "mongoose": "^5.9.19",
-    "nodemon": "^2.0.4",
-    "puppeteer": "^4.0.0",
     "qrcode": "^1.4.4",
     "socket.io": "^2.3.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  },
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "nodemonConfig": {
     "ignore": [
-      "whatsappData/*",
-      "api/chat_config.json",
       "api/homepage_config.json"
     ]
   },

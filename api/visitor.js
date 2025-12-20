@@ -5,7 +5,6 @@ const jwt = require('jsonwebtoken')
 const config = require('../config')
 const bcrypt = require('bcryptjs')
 const QRCode = require('qrcode')
-var chat_config = require('./chat_config.json')
 
 module.exports = function (app, io) {
 	//getting list of visitors
@@ -82,7 +81,6 @@ module.exports = function (app, io) {
 	})
 
 	app.post('/api/visitors/visited', (req, res) => {
-		chat_config = require('./chat_config.json')
 		var decoded = jwt.verify(req.headers['authorization'], config.secret)
 		if (decoded.role == 'Guard') {
 			var visit = new Visit()
@@ -98,7 +96,6 @@ module.exports = function (app, io) {
 				Visitor.updateOne({
 					_id: req.body.visitor._id
 				}, { is_in: true }).then((doc) => {
-					io.emit("sendMessage", {to: "91"+req.body.visitor.registered_mob+"@c.us", message: chat_config.when_enters})
 					res.json({ status: true, message: "Visitor's visit is started" })
 				}).catch((error) => {
 					res.json({ status: false, message: "Internal Error.", error: error })
@@ -112,7 +109,6 @@ module.exports = function (app, io) {
 	})
 
 	app.post('/api/visitors/visitOver', (req, res) => {
-		chat_config = require('./chat_config.json')
 		var decoded = jwt.verify(req.headers['authorization'], config.secret)
 		if (decoded.role == 'Guard') {
 			Visit.updateOne({
@@ -125,7 +121,6 @@ module.exports = function (app, io) {
 				Visitor.updateOne({
 					_id: req.body.visitor._id
 				}, { is_in: false }).then((doc) => {
-					io.emit("sendMessage", {to: "91"+req.body.visitor.registered_mob+"@c.us", message: chat_config.when_leaves})
 					res.json({ status: true, message: "Visitor's visit is completed" })
 				}).catch((error) => {
 					res.json({ status: false, message: "Internal Error.", error: error })

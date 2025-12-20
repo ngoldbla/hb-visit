@@ -21,17 +21,8 @@ The following environment variables are required or optional for running this ap
 |----------|-------------|---------|
 | `PORT` | Port for the Express server | `3000` |
 | `NODE_ENV` | Environment mode (`development` or `production`) | `development` |
-| `ENABLE_WHATSAPP` | Enable WhatsApp bot functionality (see below) | `false` |
-
-### WhatsApp/Puppeteer Variables (only if ENABLE_WHATSAPP=true)
-
-| Variable | Description |
-|----------|-------------|
-| `PUPPETEER_EXECUTABLE_PATH` | Path to Chromium executable (set automatically on Railway) |
 
 ## Railway Deployment
-
-This app is configured for Railway deployment using Nixpacks. The `nixpacks.toml` file automatically installs Chromium dependencies if you want to use the WhatsApp feature.
 
 ### Minimum Railway Environment Variables
 
@@ -39,36 +30,6 @@ This app is configured for Railway deployment using Nixpacks. The `nixpacks.toml
 MONGODB_URI=your-mongodb-connection-string
 JWT_SECRET=your-secure-jwt-secret
 ```
-
-### Optional: Enable WhatsApp Bot
-
-```
-ENABLE_WHATSAPP=true
-```
-
-**Note:** WhatsApp Web automation requires a persistent browser session. In headless mode (production), you may have limited functionality for QR code scanning. This feature works best in local development with a visible browser.
-
-## WhatsApp Bot Feature (Puppeteer)
-
-This application includes an optional WhatsApp Web automation feature powered by Puppeteer. Here's what it does:
-
-### How It Works
-
-1. **Browser Automation**: Puppeteer launches a Chromium browser instance that connects to WhatsApp Web
-2. **QR Code Authentication**: Admin scans a QR code from the admin panel to link the institution's WhatsApp number
-3. **Visitor Registration**: Visitors can register by messaging the institution's WhatsApp number
-4. **Gate Pass Delivery**: Visitors receive their QR code gate-pass directly via WhatsApp
-
-### Endpoints
-
-- `POST /api/whatsapp/getQR` - Get QR code for WhatsApp Web authentication
-- `POST /api/whatsapp/checkStatus` - Check if WhatsApp is connected
-
-### Limitations
-
-- **Requires GUI for initial setup**: QR code scanning needs a visible browser or screen capture
-- **Session persistence**: WhatsApp session data is stored in `./whatsappData` directory
-- **Cloud deployment**: In headless mode, initial QR scanning is challenging. Consider running locally first to establish a session.
 
 ## Features
 
@@ -93,8 +54,11 @@ This application includes an optional WhatsApp Web automation feature powered by
 # Install dependencies
 npm install
 
-# Start development server
+# Start server
 npm start
+
+# Optional: auto-reload on changes
+npm run dev
 ```
 
 The app will be available at `http://localhost:3000`
