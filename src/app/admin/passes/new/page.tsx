@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Loader2, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { QRCodeSVG } from "qrcode.react";
 
 interface CreatedPass {
   pass_code: string;
@@ -109,20 +110,13 @@ export default function CreatePassPage() {
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4">
-              <Label className="text-sm text-gray-500">QR Data</Label>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="text-sm font-mono text-gray-600 truncate flex-1">
-                  {createdPass.qr_data}
-                </p>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => copyToClipboard(createdPass.qr_data)}
-                >
-                  <Copy className="w-4 h-4" />
-                </Button>
-              </div>
+            <div className="bg-white rounded-lg p-6 flex flex-col items-center border">
+              <Label className="text-sm text-gray-500 mb-4">Scan to Check In</Label>
+              <QRCodeSVG
+                value={createdPass.qr_data}
+                size={200}
+                level="M"
+              />
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4">
