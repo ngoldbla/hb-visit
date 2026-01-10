@@ -1,66 +1,36 @@
-# Visitor Management System
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-VMS helps in managing visitors visiting the institutions for various reasons. It allows visitors to check-in digitally to eliminate the tedious registeration and other paperwork. Additionally, it also keeps a track of every individual inside the campus and their timings. Institutions has guards who enter their detail in some notebooks to keep a log which are practically impossible to reconcile. It is really unpleasent and hectic for visitor to stand at the gate and give details about the visit. To ease the process of registeration, Entry-In, Entry-Out, time tracking and logging the history, this VMS can be of great use!!
+## Getting Started
 
-**Frameworks:** MEAN-Stack
-
-## Environment Variables
-
-The following environment variables are required or optional for running this application:
-
-### Required Variables
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `MONGODB_URI` | MongoDB connection string for the database | `mongodb+srv://user:pass@cluster.mongodb.net/VMS` |
-| `JWT_SECRET` | Secret key for JWT token signing. **Must be changed in production!** | `your-secure-secret-key-here` |
-
-### Optional Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Port for the Express server | `3000` |
-| `NODE_ENV` | Environment mode (`development` or `production`) | `development` |
-
-## Railway Deployment
-
-### Minimum Railway Environment Variables
-
-```
-MONGODB_URI=your-mongodb-connection-string
-JWT_SECRET=your-secure-jwt-secret
-```
-
-## Features
-
-1. **User Registeration**:
-   - Visitors can register themselves either from **Whatsapp** or on the website. It has simple user interface for the guest to register with their convieneint time-slots. There is a 4-step process on Whatsapp to register, starting by sending a simple Hi. User can retrieve his/her own **Gate-pass** without any issues from Whatsapp bot itself. Then that Gate-pass is needed to be scanned by guard at the door.
-
-2. **Profile Page**:
-   - There's user and admin page. They can change their details and password on this. The Admin page helps changing the page settings and the **content of home page with HTML editor** to provide text and data with different styles.
-
-3. **Whatsapp Settings**:
-   - **Whatsapp Settings Page can edit the messages of core AI** which replies to the user who texts on the institution's Whatsapp number. To start with this system, you only need to scan the QR Code for Web Whatsapp. This gives you the power to change the replies which will be sent to visitors while registering.
-
-4. **Guard Scanning QR Code (Entry & Exit)**:
-   - There will be access for guard's accounts as well. The guard will just **scan the QR-Code** of the visitor and get all their details and timings of entry/exit. If they are using mobile phones which they will be in the most of the cases, will open their phone's camera for scanning and uploading. Else if they are using computer we need to upload the photo of QR Code. If he lets the visitor in, the timer will start to log the time and it will end at the time of exit. Guard just needs to scan the QR-code at the time of exit, to end the tour of Visitor.
-
-5. **Admin**:
-   - Admin dashboard shows real time updates. If a guard lets someone in from any gate the numbers here changes same goes with registration. Afterwards we can even monitor each visits. It shows all the data of visits which are currently active or are completed in past. As the time increases of the visit, it will have change in color and this will alert the guards(to check up if any suspicious activity is conducted or not). In the same-way we can see master data of visitors and guards. Only the Admin panel has the ability to deregister them or register new guards.
-
-## Local Development
+First, run the development server:
 
 ```bash
-# Install dependencies
-npm install
-
-# Start server
-npm start
-
-# Optional: auto-reload on changes
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-The app will be available at `http://localhost:3000`
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-**Hope you like it!! Thank You :)**
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
