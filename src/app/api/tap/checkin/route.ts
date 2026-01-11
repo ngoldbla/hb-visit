@@ -2,6 +2,32 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { validateDeviceToken } from "@/lib/auth/tokens";
 
+// Calculate streak based on last check-in date
+function calculateStreak(lastCheckIn: string | null, currentStreak: number | null): { newStreak: number; isNewDay: boolean } {
+  if (!lastCheckIn) {
+    return { newStreak: 1, isNewDay: true };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const lastDate = new Date(lastCheckIn);
+  lastDate.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
+    // Same day - no streak change
+    return { newStreak: currentStreak || 1, isNewDay: false };
+  } else if (diffDays === 1) {
+    // Consecutive day - increment streak
+    return { newStreak: (currentStreak || 0) + 1, isNewDay: true };
+  } else {
+    // Gap in days - reset streak
+    return { newStreak: 1, isNewDay: true };
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Get the token from header or body
@@ -23,18 +49,64 @@ export async function POST(request: NextRequest) {
     // Validate the token
     const validation = await validateDeviceToken(token);
 
-    if (!validation.success) {
+    if (!validation.success || !validation.visitorEmail || !validation.visitorName) {
       return NextResponse.json(
-        { success: false, error: validation.error, requiresAuth: true },
+        { success: false, error: validation.error || "Invalid token", requiresAuth: true },
         { status: 401 }
       );
     }
 
-    const { visitorEmail, visitorName } = validation;
+    const visitorEmail = validation.visitorEmail;
+    const visitorName = validation.visitorName;
 
-    // Create check-in record
     const supabase = await createClient();
 
+    // Get or create member record for streak tracking
+    let member = null;
+    const { data: existingMember } = await supabase
+      .from("members")
+      .select("id, current_streak, longest_streak, last_check_in")
+      .eq("email", visitorEmail)
+      .single();
+
+    if (existingMember) {
+      member = existingMember;
+    } else {
+      // Create member if doesn't exist
+      const { data: newMember } = await supabase
+        .from("members")
+        .insert({
+          email: visitorEmail,
+          name: visitorName,
+          current_streak: 1,
+          longest_streak: 1,
+          last_check_in: new Date().toISOString().split("T")[0],
+        })
+        .select("id, current_streak, longest_streak, last_check_in")
+        .single();
+      member = newMember;
+    }
+
+    // Calculate new streak
+    const { newStreak, isNewDay } = calculateStreak(
+      member?.last_check_in ?? null,
+      member?.current_streak ?? null
+    );
+
+    // Update member streak if it's a new day
+    if (member && isNewDay) {
+      const newLongest = Math.max(newStreak, member.longest_streak || 0);
+      await supabase
+        .from("members")
+        .update({
+          current_streak: newStreak,
+          longest_streak: newLongest,
+          last_check_in: new Date().toISOString().split("T")[0],
+        })
+        .eq("id", member.id);
+    }
+
+    // Create check-in record
     const { data: checkIn, error: checkInError } = await supabase
       .from("check_ins")
       .insert({
@@ -42,6 +114,7 @@ export async function POST(request: NextRequest) {
         check_in_method: "nfc_token",
         location,
         visitor_name: visitorName,
+        member_id: member?.id,
         status: "checked_in",
       })
       .select("id")
@@ -55,7 +128,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Trigger host notification here
+    // Get current month's check-in count for community goal
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const { count: monthlyCount } = await supabase
+      .from("check_ins")
+      .select("id", { count: "exact" })
+      .gte("check_in_time", startOfMonth.toISOString());
+
+    // Update community goal count
+    await supabase
+      .from("community_goals")
+      .update({ current_count: monthlyCount || 0 })
+      .eq("is_active", true)
+      .eq("goal_type", "monthly_checkins");
 
     return NextResponse.json({
       success: true,
@@ -63,6 +151,8 @@ export async function POST(request: NextRequest) {
       visitor_name: visitorName,
       visitor_email: visitorEmail,
       location,
+      streak: newStreak,
+      monthly_count: monthlyCount || 0,
       message: `Welcome back, ${visitorName}!`,
     });
   } catch (error) {

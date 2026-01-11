@@ -188,7 +188,25 @@ SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx/xxx/xxx
 
 ### Programming Stickers
 
-Use the NFC Tools app (iOS/Android) to write URLs:
+**Apps to use:**
+
+| Platform | App | Notes |
+|----------|-----|-------|
+| iOS | [NFC Tools](https://apps.apple.com/app/nfc-tools/id1252962749) | Most popular, free |
+| iOS | NXP TagWriter | From chip manufacturer |
+| Android | [NFC Tools](https://play.google.com/store/apps/details?id=com.wakdev.wdnfc) | Most popular, free |
+| Android | NXP TagWriter | From chip manufacturer |
+
+**Step-by-step:**
+
+1. Download **NFC Tools** on your phone
+2. Open the app and tap **Write**
+3. Tap **Add a record** → **URL/URI**
+4. Enter your URL (e.g., `https://visit.hatchbridge.com/tap?loc=lobby`)
+5. Tap **Write** and hold your phone over the NFC sticker
+6. Wait for the success confirmation
+
+**Example URLs for different locations:**
 
 ```
 https://visit.hatchbridge.com/tap?loc=lobby-main
@@ -196,6 +214,14 @@ https://visit.hatchbridge.com/tap?loc=elevator-1
 https://visit.hatchbridge.com/tap?loc=conf-room-a
 https://visit.hatchbridge.com/tap?loc=parking-entrance
 ```
+
+**Tips:**
+
+- **NTAG213**: 144 bytes - good for short URLs
+- **NTAG215**: 504 bytes - recommended for most uses
+- **NTAG216**: 888 bytes - for longer URLs or extra data
+- You can **lock** stickers to prevent overwriting (this is permanent!)
+- For bulk programming (50+ stickers), consider a USB NFC reader/writer with desktop software like [GoToTags](https://gototags.com/)
 
 ### Placement Recommendations
 

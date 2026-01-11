@@ -1,17 +1,14 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { Home, Ticket, ClipboardList, Users } from "lucide-react";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Admin - HatchBridge Check-In",
-  description: "Manage visitor passes and check-ins",
-};
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { Home, ClipboardList, Users, Target, LogOut } from "lucide-react";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: Home },
-  { href: "/admin/passes", label: "Passes", icon: Ticket },
   { href: "/admin/checkins", label: "Check-Ins", icon: ClipboardList },
   { href: "/admin/members", label: "Members", icon: Users },
+  { href: "/admin/community", label: "Community", icon: Target },
 ];
 
 export default function AdminLayout({
@@ -19,6 +16,20 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // Don't show sidebar on login page
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
+
+  async function handleLogout() {
+    await fetch("/api/admin/auth", { method: "DELETE" });
+    router.push("/admin/login");
+    router.refresh();
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
@@ -33,7 +44,11 @@ export default function AdminLayout({
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    pathname === item.href
+                      ? "bg-white/10 text-white"
+                      : "text-white/80 hover:bg-white/10 hover:text-white"
+                  }`}
                 >
                   <item.icon className="w-5 h-5" />
                   {item.label}
@@ -42,13 +57,20 @@ export default function AdminLayout({
             ))}
           </ul>
         </nav>
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/10 space-y-3">
           <Link
             href="/"
             className="flex items-center gap-2 text-sm text-white/60 hover:text-white"
           >
             View Kiosk
           </Link>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-sm text-white/60 hover:text-white w-full"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </button>
         </div>
       </aside>
 

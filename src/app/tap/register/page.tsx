@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { startRegistration } from "@simplewebauthn/browser";
 
@@ -11,7 +11,6 @@ type RegistrationStep = "form" | "passkey" | "success" | "error";
 
 function RegisterPageContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const location = searchParams.get("loc") || "unknown";
 
   const [step, setStep] = useState<RegistrationStep>("form");
@@ -240,15 +239,6 @@ function RegisterPageContent() {
             <p className="text-[#000824]/40 text-sm">
               Next time, just tap to check in instantly
             </p>
-
-            <div className="mt-6 pt-6 border-t border-gray-100">
-              <button
-                onClick={() => router.push("/passes/lookup")}
-                className="text-[#2153ff] font-medium"
-              >
-                Get your wallet pass →
-              </button>
-            </div>
           </div>
         )}
 
