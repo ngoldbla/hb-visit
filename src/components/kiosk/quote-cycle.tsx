@@ -105,7 +105,7 @@ export function QuoteCycle({ quotes, displayDuration = 8000, onSkip }: QuoteCycl
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="text-3xl md:text-4xl lg:text-5xl font-medium leading-relaxed tracking-tight"
+              className="text-4xl md:text-5xl lg:text-6xl font-medium leading-relaxed tracking-tight"
               style={{ fontFamily: "Georgia, serif", color: colors.text }}
             >
               {displayText}
@@ -128,25 +128,6 @@ export function QuoteCycle({ quotes, displayDuration = 8000, onSkip }: QuoteCycl
               </motion.p>
             )}
 
-            {/* Category badge */}
-            {currentQuote.category && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.6 }}
-                className="mt-6"
-              >
-                <span
-                  className="inline-block px-4 py-1.5 rounded-full text-sm font-medium"
-                  style={{
-                    backgroundColor: `${colors.primary}33`,
-                    color: `${colors.text}99`,
-                  }}
-                >
-                  {currentQuote.category}
-                </span>
-              </motion.div>
-            )}
           </motion.div>
         </AnimatePresence>
       </div>
