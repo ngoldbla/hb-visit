@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { startAuthentication } from "@simplewebauthn/browser";
 
-type TapStatus = "checking" | "authenticating" | "success" | "registering" | "error";
+type TapStatus = "checking" | "choice" | "authenticating" | "success" | "registering" | "error";
 
 const STORAGE_KEY = "hb_visitor_token";
 
@@ -107,14 +107,9 @@ function TapPageContent() {
         localStorage.removeItem(STORAGE_KEY);
       }
 
-      // 2. Try passkey authentication
-      const passkeySuccess = await tryPasskeyAuth();
-      if (passkeySuccess) {
-        return;
-      }
-
-      // 3. Fall back to registration
-      setStatus("registering");
+      // 2. Show choice UI - let user decide whether to use passkey or register
+      // This prevents iOS from showing the native auth sheet on page load
+      setStatus("choice");
     }
 
     handleTap();
@@ -143,6 +138,42 @@ function TapPageContent() {
           >
             <div className="w-16 h-16 border-4 border-[#2153ff] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-[#000824] text-lg">Checking in...</p>
+          </motion.div>
+        )}
+
+        {status === "choice" && (
+          <motion.div
+            key="choice"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="text-center max-w-sm"
+          >
+            <div className="w-20 h-20 bg-[#2153ff] rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-[#000824] mb-2">
+              Welcome to HatchBridge!
+            </h1>
+            <p className="text-[#000824]/60 mb-8">
+              Quick check-in at {location}
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => tryPasskeyAuth()}
+                className="w-full bg-[#2153ff] text-white px-6 py-4 rounded-xl font-medium text-lg hover:bg-[#1a42cc] transition-colors"
+              >
+                I&apos;ve been here before
+              </button>
+              <button
+                onClick={() => router.push(`/tap/register?loc=${encodeURIComponent(location)}`)}
+                className="w-full bg-white text-[#000824] px-6 py-4 rounded-xl font-medium text-lg border-2 border-[#000824]/10 hover:border-[#2153ff] transition-colors"
+              >
+                First time? Register
+              </button>
+            </div>
           </motion.div>
         )}
 
