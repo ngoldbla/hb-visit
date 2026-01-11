@@ -9,6 +9,39 @@ const STORAGE_KEY = "hb_visitor_token";
 
 type RegistrationStep = "form" | "passkey" | "success" | "error";
 
+// Curated emoji options for avatars - fun and expressive
+const AVATAR_EMOJIS = [
+  "😊", "😎", "🚀", "💡", "🔥", "⭐", "🎯", "💪",
+  "🌟", "🎨", "📚", "💻", "🎵", "☕", "🌈", "🦄",
+  "🐱", "🐶", "🦊", "🐼", "🦁", "🐸", "🦋", "🌻",
+];
+
+function EmojiPicker({ selected, onSelect }: { selected: string; onSelect: (emoji: string) => void }) {
+  return (
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-[#000824]">
+        Pick your avatar
+      </label>
+      <div className="grid grid-cols-8 gap-2">
+        {AVATAR_EMOJIS.map((emoji) => (
+          <button
+            key={emoji}
+            type="button"
+            onClick={() => onSelect(emoji)}
+            className={`w-10 h-10 text-xl rounded-lg transition-all ${
+              selected === emoji
+                ? "bg-[#ffc421] ring-2 ring-[#ff9d00] scale-110"
+                : "bg-gray-100 hover:bg-gray-200"
+            }`}
+          >
+            {emoji}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function RegisterPageContent() {
   const searchParams = useSearchParams();
   const location = searchParams.get("loc") || "unknown";
@@ -18,6 +51,7 @@ function RegisterPageContent() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
+  const [avatarEmoji, setAvatarEmoji] = useState("😊");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -33,7 +67,7 @@ function RegisterPageContent() {
     setErrorMessage("");
 
     try {
-      // Step 1: Create device token
+      // Step 1: Create device token and member record
       const tokenResponse = await fetch("/api/tap/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -42,6 +76,7 @@ function RegisterPageContent() {
           email: email.trim().toLowerCase(),
           phone: phone.trim() || null,
           company: company.trim() || null,
+          avatarEmoji,
           location,
         }),
       });
@@ -103,7 +138,7 @@ function RegisterPageContent() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [name, email, phone, company, location]);
+  }, [name, email, phone, company, avatarEmoji, location]);
 
   return (
     <div className="min-h-screen bg-[#fff9e9] flex items-center justify-center p-4">
@@ -139,6 +174,8 @@ function RegisterPageContent() {
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2153ff] focus:border-transparent"
                 />
               </div>
+
+              <EmojiPicker selected={avatarEmoji} onSelect={setAvatarEmoji} />
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-[#000824] mb-1">
@@ -226,11 +263,9 @@ function RegisterPageContent() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring" }}
-              className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6"
+              className="w-24 h-24 bg-gradient-to-br from-[#ffc421] to-[#ff9d00] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
             >
-              <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
+              <span className="text-5xl">{avatarEmoji}</span>
             </motion.div>
             <h1 className="text-2xl font-bold text-[#000824] mb-2">
               Welcome, {name}!

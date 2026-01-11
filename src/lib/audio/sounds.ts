@@ -124,3 +124,29 @@ export function playMobileChime(): void {
   playChirp(ctx, { startFreq: 800, endFreq: 1100, duration: 0.08, gain: 0.2 });
   playChirp(ctx, { startFreq: 1000, endFreq: 1300, duration: 0.1, delay: 0.1, gain: 0.15 });
 }
+
+/**
+ * Play a farewell sequence for check-outs
+ * Descending, winding-down chirps that sound like "bye bye"
+ */
+export function playFarewellChirp(): void {
+  if (!isAudioReady()) return;
+  const ctx = getAudioContext();
+
+  // Descending "bye bye" pattern - opposite of happy beep
+  playChirp(ctx, { startFreq: 1200, endFreq: 800, duration: 0.12, delay: 0 });
+  playChirp(ctx, { startFreq: 1000, endFreq: 600, duration: 0.15, delay: 0.15 });
+  playChirp(ctx, { startFreq: 800, endFreq: 500, duration: 0.2, delay: 0.32, gain: 0.25 });
+}
+
+/**
+ * Play a softer farewell chime for mobile check-outs
+ */
+export function playMobileFarewell(): void {
+  if (!isAudioReady()) return;
+  const ctx = getAudioContext();
+
+  // Shorter, gentler descending beeps for mobile checkout
+  playChirp(ctx, { startFreq: 1000, endFreq: 700, duration: 0.1, gain: 0.2 });
+  playChirp(ctx, { startFreq: 800, endFreq: 500, duration: 0.12, delay: 0.12, gain: 0.15 });
+}
