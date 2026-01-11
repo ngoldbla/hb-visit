@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { HolidayProvider } from "@/lib/holidays";
 
 export const metadata: Metadata = {
   title: "HatchBridge Check-In",
@@ -29,8 +30,10 @@ export default function KioskLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#fff9e9] overflow-hidden touch-none select-none">
-      {children}
-    </div>
+    <HolidayProvider>
+      <div className="min-h-screen overflow-hidden touch-none select-none">
+        {children}
+      </div>
+    </HolidayProvider>
   );
 }

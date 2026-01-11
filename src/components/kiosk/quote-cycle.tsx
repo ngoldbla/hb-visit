@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { useHolidayTheme, applyQuoteTransform, getDefaultTheme } from "@/lib/holidays";
+import { ThemedParticles } from "./themed-particles";
+import { ThemeOverlay } from "./theme-overlay";
 
 export interface Quote {
   id: string;
@@ -18,47 +21,17 @@ interface QuoteCycleProps {
   onSkip?: () => void; // callback to skip to stats screen
 }
 
-// Floating particles background
-function ParticleBackground() {
-  const particles = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 4 + 2,
-    duration: Math.random() * 20 + 15,
-    delay: Math.random() * 5,
-  }));
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((p) => (
-        <motion.div
-          key={p.id}
-          className="absolute rounded-full bg-[#ffc421]/20"
-          style={{
-            width: p.size,
-            height: p.size,
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-          }}
-          animate={{
-            y: [0, -30, 0],
-            opacity: [0.2, 0.4, 0.2],
-          }}
-          transition={{
-            duration: p.duration,
-            repeat: Infinity,
-            delay: p.delay,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
 export function QuoteCycle({ quotes, displayDuration = 8000, onSkip }: QuoteCycleProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Get holiday theme (or default)
+  const theme = useHolidayTheme() || getDefaultTheme();
+  const colors = theme.colors;
+
+  // Parse background (could be gradient or solid color)
+  const bgStyle = colors.background.startsWith("linear-gradient")
+    ? { background: colors.background }
+    : { backgroundColor: colors.background };
 
   useEffect(() => {
     if (quotes.length <= 1) return;
@@ -76,12 +49,19 @@ export function QuoteCycle({ quotes, displayDuration = 8000, onSkip }: QuoteCycl
 
   const currentQuote = quotes[currentIndex];
 
+  // Apply quote transformation (prefix/suffix) if theme has one
+  const displayText = applyQuoteTransform(currentQuote.text, theme);
+
   return (
     <div
-      className="h-full bg-[#fff9e9] flex flex-col relative overflow-hidden cursor-pointer touch-auto"
+      className="h-full flex flex-col relative overflow-hidden cursor-pointer touch-auto"
+      style={bgStyle}
       onClick={onSkip}
     >
-      <ParticleBackground />
+      <ThemedParticles theme={theme} count={20} />
+      {theme.decorations.overlay && (
+        <ThemeOverlay overlay={theme.decorations.overlay} respectful={theme.respectful} />
+      )}
 
       {/* Header with logo */}
       <motion.header
@@ -114,7 +94,8 @@ export function QuoteCycle({ quotes, displayDuration = 8000, onSkip }: QuoteCycl
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2 }}
-              className="text-[#ffc421]/30 text-8xl font-serif mb-4"
+              className="text-8xl font-serif mb-4"
+              style={{ color: `${colors.primary}4D` }}
             >
               &ldquo;
             </motion.div>
@@ -124,10 +105,10 @@ export function QuoteCycle({ quotes, displayDuration = 8000, onSkip }: QuoteCycl
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="text-3xl md:text-4xl lg:text-5xl font-medium text-[#000824] leading-relaxed tracking-tight"
-              style={{ fontFamily: "Georgia, serif" }}
+              className="text-3xl md:text-4xl lg:text-5xl font-medium leading-relaxed tracking-tight"
+              style={{ fontFamily: "Georgia, serif", color: colors.text }}
             >
-              {currentQuote.text}
+              {displayText}
             </motion.p>
 
             {/* Author */}
@@ -155,7 +136,13 @@ export function QuoteCycle({ quotes, displayDuration = 8000, onSkip }: QuoteCycl
                 transition={{ delay: 0.6 }}
                 className="mt-6"
               >
-                <span className="inline-block bg-[#ffc421]/20 text-[#000824]/60 px-4 py-1.5 rounded-full text-sm font-medium">
+                <span
+                  className="inline-block px-4 py-1.5 rounded-full text-sm font-medium"
+                  style={{
+                    backgroundColor: `${colors.primary}33`,
+                    color: `${colors.text}99`,
+                  }}
+                >
                   {currentQuote.category}
                 </span>
               </motion.div>
@@ -170,9 +157,10 @@ export function QuoteCycle({ quotes, displayDuration = 8000, onSkip }: QuoteCycl
           {quotes.map((_, i) => (
             <motion.div
               key={i}
-              className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                i === currentIndex ? "bg-[#ffc421]" : "bg-[#333]/10"
-              }`}
+              className="w-2 h-2 rounded-full transition-colors duration-300"
+              style={{
+                backgroundColor: i === currentIndex ? colors.primary : `${colors.text}1A`,
+              }}
               animate={i === currentIndex ? { scale: [1, 1.2, 1] } : {}}
               transition={{ duration: 0.3 }}
             />
