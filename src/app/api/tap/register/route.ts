@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createDeviceToken } from "@/lib/auth/tokens";
 import { createClient } from "@/lib/supabase/server";
+import { validateName } from "@/lib/validation/name-moderation";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +16,15 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim();
     const trimmedName = name.trim();
+
+    // Validate name for inappropriate content
+    const nameValidation = validateName(trimmedName);
+    if (!nameValidation.isValid) {
+      return NextResponse.json(
+        { success: false, error: nameValidation.userMessage },
+        { status: 400 }
+      );
+    }
 
     // Get user agent for device tracking
     const userAgent = request.headers.get("user-agent") || undefined;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { deactivateAllTokensForVisitor } from "@/lib/auth/tokens";
+import { validateName } from "@/lib/validation/name-moderation";
 
 // PATCH - Update member fields
 export async function PATCH(request: NextRequest) {
@@ -18,7 +19,16 @@ export async function PATCH(request: NextRequest) {
     const supabase = await createClient();
 
     const updateData: Record<string, unknown> = {};
-    if (name !== undefined) updateData.name = name;
+    if (name !== undefined) {
+      const nameValidation = validateName(name);
+      if (!nameValidation.isValid) {
+        return NextResponse.json(
+          { success: false, error: nameValidation.userMessage },
+          { status: 400 }
+        );
+      }
+      updateData.name = name;
+    }
     if (email !== undefined) updateData.email = email;
     if (company !== undefined) updateData.company = company;
     if (phone !== undefined) updateData.phone = phone;
