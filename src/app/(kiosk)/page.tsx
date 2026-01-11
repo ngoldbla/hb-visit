@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AttractMode } from "@/components/kiosk/attract-mode";
 import { SuccessScreen } from "@/components/kiosk/success-screen";
 import { createClient } from "@/lib/supabase/client";
+import { formatDisplayName } from "@/lib/utils";
 
 type KioskState = "attract" | "celebrating";
 
@@ -81,7 +82,7 @@ export default function KioskPage() {
       const time = new Date(checkIn.check_in_time);
       const timeAgo = getTimeAgo(time);
       return {
-        name: checkIn.visitor_name?.split(" ")[0] || "Visitor",
+        name: formatDisplayName(checkIn.visitor_name || ""),
         time: timeAgo,
       };
     });

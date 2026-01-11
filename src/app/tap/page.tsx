@@ -4,6 +4,12 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { startAuthentication } from "@simplewebauthn/browser";
+import { formatDisplayName } from "@/lib/utils";
+import {
+  unlockAudio,
+  playMobileChime,
+  triggerHapticSuccess,
+} from "@/lib/audio";
 
 type TapStatus = "checking" | "choice" | "authenticating" | "success" | "registering" | "error";
 
@@ -33,6 +39,16 @@ function TapPageContent() {
       if (data.success) {
         setVisitorName(data.visitor_name);
         setStatus("success");
+
+        // Haptic and audio feedback (fail silently)
+        try {
+          triggerHapticSuccess();
+          await unlockAudio();
+          playMobileChime();
+        } catch {
+          // Audio/haptic not available, continue
+        }
+
         return true;
       }
 
@@ -83,6 +99,16 @@ function TapPageContent() {
         });
 
         setStatus("success");
+
+        // Haptic and audio feedback (fail silently)
+        try {
+          triggerHapticSuccess();
+          await unlockAudio();
+          playMobileChime();
+        } catch {
+          // Audio/haptic not available, continue
+        }
+
         return true;
       }
 
@@ -162,13 +188,27 @@ function TapPageContent() {
             </p>
             <div className="space-y-3">
               <button
-                onClick={() => tryPasskeyAuth()}
+                onClick={async () => {
+                  try {
+                    await unlockAudio();
+                  } catch {
+                    // Continue even if audio fails
+                  }
+                  tryPasskeyAuth();
+                }}
                 className="w-full bg-[#2153ff] text-white px-6 py-4 rounded-xl font-medium text-lg hover:bg-[#1a42cc] transition-colors"
               >
                 I&apos;ve been here before
               </button>
               <button
-                onClick={() => router.push(`/tap/register?loc=${encodeURIComponent(location)}`)}
+                onClick={async () => {
+                  try {
+                    await unlockAudio();
+                  } catch {
+                    // Continue even if audio fails
+                  }
+                  router.push(`/tap/register?loc=${encodeURIComponent(location)}`);
+                }}
                 className="w-full bg-white text-[#000824] px-6 py-4 rounded-xl font-medium text-lg border-2 border-[#000824]/10 hover:border-[#2153ff] transition-colors"
               >
                 First time? Register
@@ -214,7 +254,7 @@ function TapPageContent() {
               </svg>
             </motion.div>
             <h1 className="text-2xl font-bold text-[#000824] mb-2">
-              Welcome back, {visitorName}!
+              Welcome back, {formatDisplayName(visitorName)}!
             </h1>
             <p className="text-[#000824]/60">You&apos;re checked in</p>
             <p className="text-[#000824]/40 text-sm mt-4">

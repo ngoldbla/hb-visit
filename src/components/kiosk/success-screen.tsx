@@ -3,6 +3,13 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Clock, Flame, Users, Sparkles, Trophy } from "lucide-react";
+import { formatDisplayName } from "@/lib/utils";
+import {
+  unlockAudio,
+  playHappyBeep,
+  playStreakChirp,
+  playMilestoneSequence,
+} from "@/lib/audio";
 
 interface SuccessScreenProps {
   visitorName: string;
@@ -265,9 +272,42 @@ export function SuccessScreen({
     hour12: true,
   });
 
-  const firstName = visitorName.split(" ")[0];
+  const displayName = formatDisplayName(visitorName);
   const isNewStreak = streak === 1;
   const isMilestoneCheckIn = monthlyCount % 50 === 0;
+
+  // Play R2-D2 celebration sounds
+  useEffect(() => {
+    let cancelled = false;
+
+    async function playCelebrationSound() {
+      try {
+        await unlockAudio();
+      } catch {
+        return; // Audio not available, fail silently
+      }
+
+      if (cancelled) return;
+
+      // Small delay to sync with animation
+      setTimeout(() => {
+        if (cancelled) return;
+        if (isMilestoneCheckIn) {
+          playMilestoneSequence();
+        } else if (streak >= 3) {
+          playStreakChirp(streak);
+        } else {
+          playHappyBeep();
+        }
+      }, 200);
+    }
+
+    playCelebrationSound();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [streak, isMilestoneCheckIn]);
 
   return (
     <div className="h-full bg-[#fff9e9] flex flex-col items-center justify-center gap-6 px-8 relative overflow-hidden">
@@ -305,7 +345,7 @@ export function SuccessScreen({
         className="text-center"
       >
         <h1 className="text-6xl font-bold text-[#000824] tracking-tight">
-          Welcome, {firstName}!
+          Welcome, {displayName}!
         </h1>
         {isMilestoneCheckIn && (
           <motion.div
