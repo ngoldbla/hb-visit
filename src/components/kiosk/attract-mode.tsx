@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Smartphone, Flame, Users, TrendingUp } from "lucide-react";
+import { Nfc, Flame, Users, TrendingUp } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import Image from "next/image";
 
 // The URL for NFC stickers and registration QR
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
@@ -33,13 +34,13 @@ function AnimatedCounter({ value, suffix = "" }: { value: number; suffix?: strin
   );
 }
 
-// Floating particles background
+// Floating particles background - golden yellow theme
 function ParticleBackground() {
-  const particles = Array.from({ length: 30 }, (_, i) => ({
+  const particles = Array.from({ length: 25 }, (_, i) => ({
     id: i,
     x: Math.random() * 100,
     y: Math.random() * 100,
-    size: Math.random() * 4 + 2,
+    size: Math.random() * 6 + 3,
     duration: Math.random() * 20 + 15,
     delay: Math.random() * 5,
   }));
@@ -49,7 +50,7 @@ function ParticleBackground() {
       {particles.map((p) => (
         <motion.div
           key={p.id}
-          className="absolute rounded-full bg-[#2153ff]/20"
+          className="absolute rounded-full bg-[#ffc421]/30"
           style={{
             width: p.size,
             height: p.size,
@@ -72,7 +73,7 @@ function ParticleBackground() {
   );
 }
 
-// Progress ring component
+// Progress ring component - yellow/gold gradient
 function ProgressRing({ progress, size = 200 }: { progress: number; size?: number }) {
   const strokeWidth = 8;
   const radius = (size - strokeWidth) / 2;
@@ -87,7 +88,7 @@ function ProgressRing({ progress, size = 200 }: { progress: number; size?: numbe
         cy={size / 2}
         r={radius}
         fill="none"
-        stroke="rgba(255,255,255,0.1)"
+        stroke="rgba(0,0,0,0.08)"
         strokeWidth={strokeWidth}
       />
       {/* Progress circle */}
@@ -96,7 +97,7 @@ function ProgressRing({ progress, size = 200 }: { progress: number; size?: numbe
         cy={size / 2}
         r={radius}
         fill="none"
-        stroke="url(#progressGradient)"
+        stroke="url(#progressGradientYellow)"
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         initial={{ strokeDashoffset: circumference }}
@@ -107,9 +108,9 @@ function ProgressRing({ progress, size = 200 }: { progress: number; size?: numbe
         }}
       />
       <defs>
-        <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#2153ff" />
-          <stop offset="100%" stopColor="#10b981" />
+        <linearGradient id="progressGradientYellow" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#ffc421" />
+          <stop offset="100%" stopColor="#ff9d00" />
         </linearGradient>
       </defs>
     </svg>
@@ -124,19 +125,23 @@ export function AttractMode({ stats }: AttractModeProps) {
   const topStreak = stats?.topStreak ?? 0;
 
   return (
-    <div className="h-full bg-gradient-to-br from-[#0a0a12] via-[#0f0f1a] to-[#0a0a12] flex flex-col relative overflow-hidden">
+    <div className="h-full bg-[#fff9e9] flex flex-col relative overflow-hidden">
       <ParticleBackground />
 
-      {/* Header with logo */}
+      {/* Header with official logo */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="pt-8 pb-4 text-center relative z-10"
+        className="pt-8 pb-4 flex flex-col items-center relative z-10"
       >
-        <h1 className="text-4xl font-bold text-white tracking-tight">
-          <span className="text-[#2153ff]">Hatch</span>Bridge
-        </h1>
-        <p className="text-white/40 text-lg mt-1">Incubator Check-In</p>
+        <Image
+          src="/hatchbridge-logo.svg"
+          alt="HatchBridge"
+          width={200}
+          height={48}
+          priority
+        />
+        <p className="text-[#333]/60 text-lg mt-2 font-medium">Incubator Check-In</p>
       </motion.header>
 
       {/* Main content grid */}
@@ -147,25 +152,25 @@ export function AttractMode({ stats }: AttractModeProps) {
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white/5 backdrop-blur-sm rounded-3xl p-6 flex flex-col items-center justify-center border border-white/10"
+          className="bg-white rounded-3xl p-6 flex flex-col items-center justify-center shadow-lg shadow-black/5 border border-black/5"
         >
           <div className="relative">
             <ProgressRing progress={progress} size={180} />
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-5xl font-bold text-white">
+              <span className="text-5xl font-bold text-[#000824]">
                 <AnimatedCounter value={monthlyCount} />
               </span>
-              <span className="text-white/50 text-sm">check-ins</span>
+              <span className="text-[#333]/50 text-sm">check-ins</span>
             </div>
           </div>
 
           <div className="mt-6 text-center">
-            <p className="text-white/70 text-lg">
-              Help us reach <span className="text-[#ffc421] font-bold">{monthlyGoal.toLocaleString()}</span> this month!
+            <p className="text-[#333]/70 text-lg">
+              Help us reach <span className="text-[#000824] font-bold">{monthlyGoal.toLocaleString()}</span> this month!
             </p>
             <div className="flex items-center justify-center gap-2 mt-3">
-              <Users className="w-5 h-5 text-[#2153ff]" />
-              <span className="text-white/50">
+              <Users className="w-5 h-5 text-[#ffc421]" />
+              <span className="text-[#333]/50">
                 {Math.round(progress)}% of goal
               </span>
             </div>
@@ -177,12 +182,12 @@ export function AttractMode({ stats }: AttractModeProps) {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 }}
-              className="mt-6 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-2xl px-5 py-3 border border-orange-500/30"
+              className="mt-6 bg-gradient-to-r from-[#ffc421]/20 to-orange-400/20 rounded-full px-5 py-3 border border-[#ffc421]/40"
             >
               <div className="flex items-center gap-2">
-                <Flame className="w-5 h-5 text-orange-400" />
-                <span className="text-white/80 text-sm">
-                  Someone is on a <span className="text-orange-400 font-bold">{topStreak}-day</span> streak!
+                <Flame className="w-5 h-5 text-orange-500" />
+                <span className="text-[#333]/80 text-sm">
+                  Someone is on a <span className="text-orange-500 font-bold">{topStreak}-day</span> streak!
                 </span>
               </div>
             </motion.div>
@@ -200,11 +205,11 @@ export function AttractMode({ stats }: AttractModeProps) {
           <div className="text-center">
             <motion.div
               animate={{
-                scale: [1, 1.05, 1],
+                scale: [1, 1.03, 1],
                 boxShadow: [
-                  "0 0 0 0 rgba(33, 83, 255, 0.4)",
-                  "0 0 60px 20px rgba(33, 83, 255, 0.15)",
-                  "0 0 0 0 rgba(33, 83, 255, 0.4)",
+                  "0 8px 32px rgba(255, 196, 33, 0.3)",
+                  "0 12px 48px rgba(255, 196, 33, 0.5)",
+                  "0 8px 32px rgba(255, 196, 33, 0.3)",
                 ],
               }}
               transition={{
@@ -212,37 +217,37 @@ export function AttractMode({ stats }: AttractModeProps) {
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
-              className="w-44 h-44 rounded-[2rem] bg-gradient-to-br from-[#2153ff] to-[#1a42cc] flex items-center justify-center mx-auto shadow-2xl shadow-[#2153ff]/30 border border-white/20"
+              className="w-40 h-40 rounded-[2rem] bg-gradient-to-br from-[#ffc421] to-[#ffaa00] flex items-center justify-center mx-auto border-4 border-white"
             >
-              <Smartphone className="w-24 h-24 text-white" />
+              <Nfc className="w-20 h-20 text-[#000824]" />
             </motion.div>
-            <h2 className="text-3xl font-bold text-white mt-6">
-              Tap to Check In
+            <h2 className="text-3xl font-bold text-[#000824] mt-6">
+              Tap a Checkpoint
             </h2>
-            <p className="text-white/50 text-lg mt-2">
-              Hold your phone to any NFC point
+            <p className="text-[#333]/50 text-lg mt-2">
+              Use your phone at any NFC point
             </p>
           </div>
 
           {/* Divider */}
           <div className="flex items-center gap-4 w-full max-w-xs">
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-            <span className="text-white/30 font-medium text-sm uppercase tracking-wider">or</span>
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#333]/20 to-transparent" />
+            <span className="text-[#333]/30 font-medium text-sm uppercase tracking-wider">or</span>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#333]/20 to-transparent" />
           </div>
 
           {/* Registration QR Code */}
           <div className="text-center">
             <motion.div
               animate={{
-                borderColor: ["rgba(255,255,255,0.1)", "rgba(33,83,255,0.5)", "rgba(255,255,255,0.1)"],
+                borderColor: ["rgba(0,0,0,0.1)", "rgba(255,196,33,0.6)", "rgba(0,0,0,0.1)"],
               }}
               transition={{
                 duration: 3,
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
-              className="w-36 h-36 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-xl p-3 border-2"
+              className="w-36 h-36 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-black/10 p-3 border-2"
             >
               <QRCodeSVG
                 value={REGISTRATION_URL}
@@ -252,10 +257,10 @@ export function AttractMode({ stats }: AttractModeProps) {
                 fgColor="#000824"
               />
             </motion.div>
-            <h3 className="text-xl font-semibold text-white/80 mt-4">
+            <h3 className="text-xl font-semibold text-[#333]/80 mt-4">
               First Time?
             </h3>
-            <p className="text-white/40 mt-1">
+            <p className="text-[#333]/40 mt-1">
               Scan to register
             </p>
           </div>
@@ -266,11 +271,11 @@ export function AttractMode({ stats }: AttractModeProps) {
           initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white/5 backdrop-blur-sm rounded-3xl p-6 border border-white/10 flex flex-col"
+          className="bg-white rounded-3xl p-6 shadow-lg shadow-black/5 border border-black/5 flex flex-col"
         >
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-[#10b981]" />
-            <h3 className="text-white/70 font-semibold">Recent Activity</h3>
+            <TrendingUp className="w-5 h-5 text-[#ffc421]" />
+            <h3 className="text-[#333]/70 font-semibold">Recent Activity</h3>
           </div>
 
           <div className="flex-1 space-y-3 overflow-hidden">
@@ -281,25 +286,25 @@ export function AttractMode({ stats }: AttractModeProps) {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.5 + i * 0.1 }}
-                  className="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3"
+                  className="flex items-center gap-3 bg-[#fff9e9] rounded-xl px-4 py-3"
                 >
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2153ff] to-[#10b981] flex items-center justify-center text-white font-bold text-sm">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#ffc421] to-[#ff9d00] flex items-center justify-center text-[#000824] font-bold text-sm">
                     {checkIn.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white font-medium truncate">
+                    <p className="text-[#000824] font-medium truncate">
                       {checkIn.name}
                     </p>
-                    <p className="text-white/40 text-sm">
+                    <p className="text-[#333]/40 text-sm">
                       {checkIn.time}
                     </p>
                   </div>
-                  <div className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse" />
+                  <div className="w-2 h-2 rounded-full bg-[#ffc421] animate-pulse" />
                 </motion.div>
               ))
             ) : (
               <div className="flex-1 flex items-center justify-center">
-                <p className="text-white/30 text-center">
+                <p className="text-[#333]/30 text-center">
                   Be the first to check in today!
                 </p>
               </div>
@@ -313,7 +318,7 @@ export function AttractMode({ stats }: AttractModeProps) {
               transition={{ delay: 1 }}
               className="mt-4 text-center"
             >
-              <p className="text-white/30 text-sm">
+              <p className="text-[#333]/30 text-sm">
                 {recentCheckIns.length} check-in{recentCheckIns.length !== 1 ? "s" : ""} today
               </p>
             </motion.div>
@@ -328,8 +333,8 @@ export function AttractMode({ stats }: AttractModeProps) {
         transition={{ delay: 0.8 }}
         className="py-4 text-center relative z-10"
       >
-        <p className="text-white/20 text-sm">
-          NFC check-in points are located throughout the building
+        <p className="text-[#333]/30 text-sm">
+          NFC checkpoints are located throughout the building
         </p>
       </motion.footer>
     </div>

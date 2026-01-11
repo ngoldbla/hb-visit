@@ -12,9 +12,9 @@ interface SuccessScreenProps {
   location?: string;
 }
 
-// Enhanced confetti with more variety
+// Enhanced confetti with brand colors
 function Confetti() {
-  const colors = ["#2153ff", "#10b981", "#ffc421", "#ff6b6b", "#4ecdc4", "#a855f7"];
+  const colors = ["#ffc421", "#000824", "#2153ff", "#ff9d00", "#ffaa00", "#ffd700"];
   const pieces = Array.from({ length: 80 }, (_, i) => ({
     id: i,
     x: Math.random() * 100,
@@ -62,19 +62,19 @@ function Confetti() {
   );
 }
 
-// Radial burst effect
+// Radial burst effect - yellow/gold theme
 function BurstEffect() {
   return (
     <motion.div
       initial={{ scale: 0, opacity: 0.8 }}
       animate={{ scale: 4, opacity: 0 }}
       transition={{ duration: 1, ease: "easeOut" }}
-      className="absolute w-32 h-32 rounded-full bg-gradient-to-r from-[#2153ff] to-[#10b981]"
+      className="absolute w-32 h-32 rounded-full bg-gradient-to-r from-[#ffc421] to-[#ff9d00]"
     />
   );
 }
 
-// Floating particles background
+// Floating particles background - golden yellow
 function CelebrationParticles() {
   const particles = Array.from({ length: 20 }, (_, i) => ({
     id: i,
@@ -127,10 +127,10 @@ function StreakBadge({ streak }: { streak: number }) {
       className={`
         relative px-8 py-4 rounded-2xl border-2
         ${isBlazing
-          ? "bg-gradient-to-r from-orange-500/30 to-red-500/30 border-orange-400"
+          ? "bg-gradient-to-r from-orange-100 to-red-100 border-orange-400"
           : isOnFire
-            ? "bg-gradient-to-r from-orange-500/20 to-yellow-500/20 border-orange-400/50"
-            : "bg-white/10 border-white/20"
+            ? "bg-gradient-to-r from-[#ffc421]/20 to-orange-200 border-[#ffc421]"
+            : "bg-white border-black/10 shadow-lg shadow-black/5"
         }
       `}
     >
@@ -146,18 +146,18 @@ function StreakBadge({ streak }: { streak: number }) {
             repeatType: "reverse",
           }}
         >
-          <Flame className={`w-10 h-10 ${isBlazing ? "text-orange-400" : isOnFire ? "text-orange-400" : "text-white/60"}`} />
+          <Flame className={`w-10 h-10 ${isBlazing ? "text-orange-500" : isOnFire ? "text-[#ffc421]" : "text-[#333]/40"}`} />
         </motion.div>
         <div className="text-center">
           <motion.span
-            className={`text-4xl font-bold ${isBlazing ? "text-orange-400" : isOnFire ? "text-orange-300" : "text-white"}`}
+            className={`text-4xl font-bold ${isBlazing ? "text-orange-500" : isOnFire ? "text-[#000824]" : "text-[#000824]"}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.7 }}
           >
             Day {streak}
           </motion.span>
-          <p className="text-white/50 text-sm">
+          <p className="text-[#333]/50 text-sm">
             {isBlazing ? "You're on fire!" : isOnFire ? "Keep it going!" : "streak"}
           </p>
         </div>
@@ -199,11 +199,11 @@ function MilestoneBadge({ count, goal }: { count: number; goal: number }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.8 }}
-      className="bg-white/5 backdrop-blur-sm rounded-2xl px-6 py-4 border border-white/10"
+      className="bg-white rounded-2xl px-6 py-4 border border-black/5 shadow-lg shadow-black/5"
     >
       <div className="flex items-center gap-4">
         <div className="relative">
-          <Users className="w-8 h-8 text-[#2153ff]" />
+          <Users className="w-8 h-8 text-[#ffc421]" />
           {isMilestone && (
             <motion.div
               animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
@@ -215,24 +215,24 @@ function MilestoneBadge({ count, goal }: { count: number; goal: number }) {
           )}
         </div>
         <div>
-          <p className="text-white/70 text-sm">You're check-in</p>
-          <p className="text-white text-2xl font-bold">
+          <p className="text-[#333]/70 text-sm">You're check-in</p>
+          <p className="text-[#000824] text-2xl font-bold">
             #{count.toLocaleString()}
-            <span className="text-white/40 text-lg font-normal"> this month</span>
+            <span className="text-[#333]/40 text-lg font-normal"> this month</span>
           </p>
         </div>
       </div>
 
       {/* Mini progress bar */}
-      <div className="mt-3 h-1.5 bg-white/10 rounded-full overflow-hidden">
+      <div className="mt-3 h-1.5 bg-black/10 rounded-full overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ delay: 1, duration: 1, ease: "easeOut" }}
-          className="h-full bg-gradient-to-r from-[#2153ff] to-[#10b981] rounded-full"
+          className="h-full bg-gradient-to-r from-[#ffc421] to-[#ff9d00] rounded-full"
         />
       </div>
-      <p className="text-white/40 text-xs mt-1">
+      <p className="text-[#333]/40 text-xs mt-1">
         {Math.round(progress)}% to {goal.toLocaleString()} goal
       </p>
     </motion.div>
@@ -270,7 +270,7 @@ export function SuccessScreen({
   const isMilestoneCheckIn = monthlyCount % 50 === 0;
 
   return (
-    <div className="h-full bg-gradient-to-br from-[#0a0a12] via-[#0f0f1a] to-[#0a0a12] flex flex-col items-center justify-center gap-6 px-8 relative overflow-hidden">
+    <div className="h-full bg-[#fff9e9] flex flex-col items-center justify-center gap-6 px-8 relative overflow-hidden">
       <CelebrationParticles />
       {showConfetti && <Confetti />}
 
@@ -285,15 +285,15 @@ export function SuccessScreen({
         <motion.div
           animate={{
             boxShadow: [
-              "0 0 0 0 rgba(16, 185, 129, 0.4)",
-              "0 0 60px 20px rgba(16, 185, 129, 0.2)",
-              "0 0 0 0 rgba(16, 185, 129, 0.4)",
+              "0 0 0 0 rgba(255, 196, 33, 0.4)",
+              "0 0 60px 20px rgba(255, 196, 33, 0.2)",
+              "0 0 0 0 rgba(255, 196, 33, 0.4)",
             ],
           }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="w-36 h-36 rounded-full bg-gradient-to-br from-[#10b981] to-[#059669] flex items-center justify-center shadow-2xl"
+          className="w-36 h-36 rounded-full bg-gradient-to-br from-[#ffc421] to-[#ff9d00] flex items-center justify-center shadow-2xl"
         >
-          <CheckCircle2 className="w-20 h-20 text-white" />
+          <CheckCircle2 className="w-20 h-20 text-[#000824]" />
         </motion.div>
       </motion.div>
 
@@ -304,7 +304,7 @@ export function SuccessScreen({
         transition={{ delay: 0.2 }}
         className="text-center"
       >
-        <h1 className="text-6xl font-bold text-white tracking-tight">
+        <h1 className="text-6xl font-bold text-[#000824] tracking-tight">
           Welcome, {firstName}!
         </h1>
         {isMilestoneCheckIn && (
@@ -326,13 +326,13 @@ export function SuccessScreen({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="flex items-center gap-3 text-white/60"
+        className="flex items-center gap-3 text-[#333]/60"
       >
         <Clock className="w-5 h-5" />
         <span className="text-lg">Checked in at {timeString}</span>
         {location && location !== "unknown" && (
           <>
-            <span className="text-white/30">•</span>
+            <span className="text-[#333]/30">•</span>
             <span className="text-lg capitalize">{location}</span>
           </>
         )}
@@ -357,7 +357,7 @@ export function SuccessScreen({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
-        className="text-xl text-white/50 mt-4"
+        className="text-xl text-[#333]/50 mt-4"
       >
         {isNewStreak
           ? "Great start! Come back tomorrow to build your streak."
@@ -375,7 +375,7 @@ export function SuccessScreen({
         transition={{ delay: 1.5 }}
         className="absolute bottom-8"
       >
-        <p className="text-sm text-white/20">
+        <p className="text-sm text-[#333]/20">
           This screen will reset automatically
         </p>
       </motion.div>
