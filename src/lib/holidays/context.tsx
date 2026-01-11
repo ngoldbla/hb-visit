@@ -67,7 +67,19 @@ export function HolidayProvider({ children }: HolidayProviderProps) {
     fetchSettings();
   }, [fetchSettings]);
 
-  // Subscribe to real-time settings changes for live updates from admin portal
+  // Poll for settings changes every 5 seconds to catch admin portal updates
+  // This ensures themes propagate reliably even if realtime isn't configured
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchSettings();
+    }, 5000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [fetchSettings]);
+
+  // Also subscribe to real-time settings changes for instant updates (if realtime is enabled)
   useEffect(() => {
     const supabase = createClient();
 
@@ -76,14 +88,16 @@ export function HolidayProvider({ children }: HolidayProviderProps) {
       .on(
         "postgres_changes",
         {
-          event: "UPDATE",
+          event: "*",
           schema: "public",
           table: "kiosk_settings",
-          filter: "key=eq.holiday_config",
         },
-        () => {
+        (payload) => {
           // Refetch settings when holiday_config is updated
-          fetchSettings();
+          const record = payload.new as { setting_key?: string } | undefined;
+          if (record?.setting_key === "holiday_config") {
+            fetchSettings();
+          }
         }
       )
       .subscribe();
