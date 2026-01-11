@@ -9,111 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      device_tokens: {
-        Row: {
-          id: string
-          token: string
-          visitor_email: string
-          visitor_name: string
-          created_at: string | null
-          last_used_at: string | null
-          user_agent: string | null
-          is_active: boolean | null
-        }
-        Insert: {
-          id?: string
-          token: string
-          visitor_email: string
-          visitor_name: string
-          created_at?: string | null
-          last_used_at?: string | null
-          user_agent?: string | null
-          is_active?: boolean | null
-        }
-        Update: {
-          id?: string
-          token?: string
-          visitor_email?: string
-          visitor_name?: string
-          created_at?: string | null
-          last_used_at?: string | null
-          user_agent?: string | null
-          is_active?: boolean | null
-        }
-        Relationships: []
-      }
-      passkey_credentials: {
-        Row: {
-          id: string
-          visitor_email: string
-          credential_id: string
-          public_key: string
-          counter: number | null
-          transports: string[] | null
-          created_at: string | null
-          last_used_at: string | null
-        }
-        Insert: {
-          id?: string
-          visitor_email: string
-          credential_id: string
-          public_key: string
-          counter?: number | null
-          transports?: string[] | null
-          created_at?: string | null
-          last_used_at?: string | null
-        }
-        Update: {
-          id?: string
-          visitor_email?: string
-          credential_id?: string
-          public_key?: string
-          counter?: number | null
-          transports?: string[] | null
-          created_at?: string | null
-          last_used_at?: string | null
-        }
-        Relationships: []
-      }
-      host_preferences: {
-        Row: {
-          id: string
-          email: string
-          name: string
-          notify_email: boolean | null
-          notify_sms: boolean | null
-          notify_slack: boolean | null
-          phone: string | null
-          slack_user_id: string | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          email: string
-          name: string
-          notify_email?: boolean | null
-          notify_sms?: boolean | null
-          notify_slack?: boolean | null
-          phone?: string | null
-          slack_user_id?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          email?: string
-          name?: string
-          notify_email?: boolean | null
-          notify_sms?: boolean | null
-          notify_slack?: boolean | null
-          phone?: string | null
-          slack_user_id?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       check_ins: {
         Row: {
           check_in_method: string
@@ -127,7 +22,6 @@ export type Database = {
           kiosk_id: string | null
           location: string | null
           member_id: string | null
-          pass_id: string | null
           song_added: string | null
           status: string | null
           visitor_name: string | null
@@ -145,7 +39,6 @@ export type Database = {
           kiosk_id?: string | null
           location?: string | null
           member_id?: string | null
-          pass_id?: string | null
           song_added?: string | null
           status?: string | null
           visitor_name?: string | null
@@ -163,7 +56,6 @@ export type Database = {
           kiosk_id?: string | null
           location?: string | null
           member_id?: string | null
-          pass_id?: string | null
           song_added?: string | null
           status?: string | null
           visitor_name?: string | null
@@ -177,14 +69,112 @@ export type Database = {
             referencedRelation: "members"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "check_ins_pass_id_fkey"
-            columns: ["pass_id"]
-            isOneToOne: false
-            referencedRelation: "passes"
-            referencedColumns: ["id"]
-          },
         ]
+      }
+      community_goals: {
+        Row: {
+          created_at: string | null
+          current_count: number | null
+          end_date: string
+          goal_type: string
+          id: string
+          is_active: boolean | null
+          start_date: string
+          target_count: number
+        }
+        Insert: {
+          created_at?: string | null
+          current_count?: number | null
+          end_date: string
+          goal_type?: string
+          id?: string
+          is_active?: boolean | null
+          start_date: string
+          target_count: number
+        }
+        Update: {
+          created_at?: string | null
+          current_count?: number | null
+          end_date?: string
+          goal_type?: string
+          id?: string
+          is_active?: boolean | null
+          start_date?: string
+          target_count?: number
+        }
+        Relationships: []
+      }
+      device_tokens: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_used_at: string | null
+          token: string
+          user_agent: string | null
+          visitor_email: string
+          visitor_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          token: string
+          user_agent?: string | null
+          visitor_email: string
+          visitor_name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          token?: string
+          user_agent?: string | null
+          visitor_email?: string
+          visitor_name?: string
+        }
+        Relationships: []
+      }
+      host_preferences: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+          notify_email: boolean | null
+          notify_slack: boolean | null
+          notify_sms: boolean | null
+          phone: string | null
+          slack_user_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          name: string
+          notify_email?: boolean | null
+          notify_slack?: boolean | null
+          notify_sms?: boolean | null
+          phone?: string | null
+          slack_user_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+          notify_email?: boolean | null
+          notify_slack?: boolean | null
+          notify_sms?: boolean | null
+          phone?: string | null
+          slack_user_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       members: {
         Row: {
@@ -225,79 +215,38 @@ export type Database = {
         }
         Relationships: []
       }
-      passes: {
+      passkey_credentials: {
         Row: {
-          apple_pass_serial: string | null
+          counter: number | null
           created_at: string | null
-          expires_at: string
-          google_pass_id: string | null
-          host_email: string | null
-          host_name: string | null
+          credential_id: string
           id: string
-          meeting_room: string | null
-          member_id: string | null
-          pass_code: string
-          purpose: string | null
-          qr_payload: Json | null
-          scheduled_date: string
-          scheduled_time: string | null
-          status: string | null
-          used_at: string | null
-          visitor_company: string | null
+          last_used_at: string | null
+          public_key: string
+          transports: string[] | null
           visitor_email: string
-          visitor_name: string
         }
         Insert: {
-          apple_pass_serial?: string | null
+          counter?: number | null
           created_at?: string | null
-          expires_at: string
-          google_pass_id?: string | null
-          host_email?: string | null
-          host_name?: string | null
+          credential_id: string
           id?: string
-          meeting_room?: string | null
-          member_id?: string | null
-          pass_code: string
-          purpose?: string | null
-          qr_payload?: Json | null
-          scheduled_date: string
-          scheduled_time?: string | null
-          status?: string | null
-          used_at?: string | null
-          visitor_company?: string | null
+          last_used_at?: string | null
+          public_key: string
+          transports?: string[] | null
           visitor_email: string
-          visitor_name: string
         }
         Update: {
-          apple_pass_serial?: string | null
+          counter?: number | null
           created_at?: string | null
-          expires_at?: string
-          google_pass_id?: string | null
-          host_email?: string | null
-          host_name?: string | null
+          credential_id?: string
           id?: string
-          meeting_room?: string | null
-          member_id?: string | null
-          pass_code?: string
-          purpose?: string | null
-          qr_payload?: Json | null
-          scheduled_date?: string
-          scheduled_time?: string | null
-          status?: string | null
-          used_at?: string | null
-          visitor_company?: string | null
+          last_used_at?: string | null
+          public_key?: string
+          transports?: string[] | null
           visitor_email?: string
-          visitor_name?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "passes_member_id_fkey"
-            columns: ["member_id"]
-            isOneToOne: false
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {

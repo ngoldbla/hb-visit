@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Home, Ticket, ClipboardList, Users } from "lucide-react";
+import { Home, ClipboardList, Users, Target } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Admin - HatchBridge Check-In",
-  description: "Manage visitor passes and check-ins",
+  description: "Manage visitor check-ins",
 };
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: Home },
-  { href: "/admin/passes", label: "Passes", icon: Ticket },
   { href: "/admin/checkins", label: "Check-Ins", icon: ClipboardList },
   { href: "/admin/members", label: "Members", icon: Users },
+  { href: "/admin/community", label: "Community", icon: Target },
 ];
 
 export default function AdminLayout({

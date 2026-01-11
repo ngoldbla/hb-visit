@@ -15,23 +15,19 @@ import {
 import { RefreshCw } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-interface CheckInWithPass {
+interface CheckIn {
   id: string;
   check_in_time: string;
   check_in_method: string;
   check_out_time: string | null;
   duration_minutes: number | null;
-  status: string;
-  passes: {
-    visitor_name: string;
-    visitor_email: string;
-    visitor_company: string | null;
-    host_name: string | null;
-  } | null;
+  status: string | null;
+  visitor_name: string | null;
+  location: string | null;
 }
 
 export default function CheckInsPage() {
-  const [checkIns, setCheckIns] = useState<CheckInWithPass[]>([]);
+  const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function fetchCheckIns() {
@@ -46,17 +42,13 @@ export default function CheckInsPage() {
         check_out_time,
         duration_minutes,
         status,
-        passes (
-          visitor_name,
-          visitor_email,
-          visitor_company,
-          host_name
-        )
+        visitor_name,
+        location
       `)
       .order("check_in_time", { ascending: false })
       .limit(100);
 
-    setCheckIns((data as CheckInWithPass[]) || []);
+    setCheckIns((data as CheckIn[]) || []);
     setLoading(false);
   }
 
@@ -103,8 +95,7 @@ export default function CheckInsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Visitor</TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead>Host</TableHead>
+              <TableHead>Location</TableHead>
               <TableHead>Check-In</TableHead>
               <TableHead>Check-Out</TableHead>
               <TableHead>Duration</TableHead>
@@ -115,13 +106,13 @@ export default function CheckInsPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
+                <TableCell colSpan={7} className="text-center py-8">
                   Loading check-ins...
                 </TableCell>
               </TableRow>
             ) : checkIns.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
+                <TableCell colSpan={7} className="text-center py-8">
                   No check-ins found.
                 </TableCell>
               </TableRow>
@@ -129,19 +120,11 @@ export default function CheckInsPage() {
               checkIns.map((checkIn) => (
                 <TableRow key={checkIn.id}>
                   <TableCell>
-                    <div>
-                      <p className="font-medium">
-                        {checkIn.passes?.visitor_name || "Unknown"}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {checkIn.passes?.visitor_email}
-                      </p>
-                    </div>
+                    <p className="font-medium">
+                      {checkIn.visitor_name || "Unknown Visitor"}
+                    </p>
                   </TableCell>
-                  <TableCell>
-                    {checkIn.passes?.visitor_company || "-"}
-                  </TableCell>
-                  <TableCell>{checkIn.passes?.host_name || "-"}</TableCell>
+                  <TableCell>{checkIn.location || "-"}</TableCell>
                   <TableCell>{formatDateTime(checkIn.check_in_time)}</TableCell>
                   <TableCell>
                     {checkIn.check_out_time
