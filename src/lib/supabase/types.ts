@@ -19,6 +19,7 @@ export type Database = {
           duration_minutes: number | null
           host_notified_at: string | null
           id: string
+          is_overtap: boolean | null
           kiosk_id: string | null
           location: string | null
           member_id: string | null
@@ -36,6 +37,7 @@ export type Database = {
           duration_minutes?: number | null
           host_notified_at?: string | null
           id?: string
+          is_overtap?: boolean | null
           kiosk_id?: string | null
           location?: string | null
           member_id?: string | null
@@ -53,6 +55,7 @@ export type Database = {
           duration_minutes?: number | null
           host_notified_at?: string | null
           id?: string
+          is_overtap?: boolean | null
           kiosk_id?: string | null
           location?: string | null
           member_id?: string | null
@@ -181,8 +184,10 @@ export type Database = {
           company: string | null
           created_at: string | null
           current_streak: number | null
+          deactivated_at: string | null
           email: string
           id: string
+          is_active: boolean | null
           last_check_in: string | null
           longest_streak: number | null
           name: string
@@ -193,8 +198,10 @@ export type Database = {
           company?: string | null
           created_at?: string | null
           current_streak?: number | null
+          deactivated_at?: string | null
           email: string
           id?: string
+          is_active?: boolean | null
           last_check_in?: string | null
           longest_streak?: number | null
           name: string
@@ -205,8 +212,10 @@ export type Database = {
           company?: string | null
           created_at?: string | null
           current_streak?: number | null
+          deactivated_at?: string | null
           email?: string
           id?: string
+          is_active?: boolean | null
           last_check_in?: string | null
           longest_streak?: number | null
           name?: string
