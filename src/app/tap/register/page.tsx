@@ -4,6 +4,7 @@ import { useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { startRegistration } from "@simplewebauthn/browser";
+import { validateName } from "@/lib/validation/name-moderation";
 
 const STORAGE_KEY = "hb_visitor_token";
 
@@ -60,6 +61,13 @@ function RegisterPageContent() {
 
     if (!name.trim() || !email.trim()) {
       setErrorMessage("Name and email are required");
+      return;
+    }
+
+    // Validate name for inappropriate content
+    const nameValidation = validateName(name.trim());
+    if (!nameValidation.isValid) {
+      setErrorMessage(nameValidation.userMessage || "Invalid name");
       return;
     }
 

@@ -26,6 +26,7 @@ import { RefreshCw, Flame, Pencil, UserX, UserCheck, AlertTriangle, Download } f
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/lib/supabase/types";
+import { validateName } from "@/lib/validation/name-moderation";
 
 type Member = Database["public"]["Tables"]["members"]["Row"];
 
@@ -98,6 +99,13 @@ export default function MembersPage() {
 
   async function saveMember() {
     if (!editingMember) return;
+
+    // Validate name for inappropriate content
+    const nameValidation = validateName(editForm.name);
+    if (!nameValidation.isValid) {
+      toast.error(nameValidation.userMessage || "Invalid name");
+      return;
+    }
 
     setSaving(true);
     try {
