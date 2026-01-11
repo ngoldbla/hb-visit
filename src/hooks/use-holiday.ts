@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   getActiveHoliday,
+  getHolidayById,
   getHolidayTheme,
   getDefaultTheme,
   getChineseZodiac,
@@ -120,8 +121,6 @@ export function useHoliday(
   const detectHoliday = useCallback(() => {
     // If preview mode is active, use the preview holiday
     if (config.previewHoliday) {
-      // Import dynamically to get the holiday by ID
-      const { getHolidayById } = require("@/lib/holidays");
       const holiday = getHolidayById(config.previewHoliday);
 
       if (holiday) {
