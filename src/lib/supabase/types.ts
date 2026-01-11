@@ -9,6 +9,111 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      device_tokens: {
+        Row: {
+          id: string
+          token: string
+          visitor_email: string
+          visitor_name: string
+          created_at: string | null
+          last_used_at: string | null
+          user_agent: string | null
+          is_active: boolean | null
+        }
+        Insert: {
+          id?: string
+          token: string
+          visitor_email: string
+          visitor_name: string
+          created_at?: string | null
+          last_used_at?: string | null
+          user_agent?: string | null
+          is_active?: boolean | null
+        }
+        Update: {
+          id?: string
+          token?: string
+          visitor_email?: string
+          visitor_name?: string
+          created_at?: string | null
+          last_used_at?: string | null
+          user_agent?: string | null
+          is_active?: boolean | null
+        }
+        Relationships: []
+      }
+      passkey_credentials: {
+        Row: {
+          id: string
+          visitor_email: string
+          credential_id: string
+          public_key: string
+          counter: number | null
+          transports: string[] | null
+          created_at: string | null
+          last_used_at: string | null
+        }
+        Insert: {
+          id?: string
+          visitor_email: string
+          credential_id: string
+          public_key: string
+          counter?: number | null
+          transports?: string[] | null
+          created_at?: string | null
+          last_used_at?: string | null
+        }
+        Update: {
+          id?: string
+          visitor_email?: string
+          credential_id?: string
+          public_key?: string
+          counter?: number | null
+          transports?: string[] | null
+          created_at?: string | null
+          last_used_at?: string | null
+        }
+        Relationships: []
+      }
+      host_preferences: {
+        Row: {
+          id: string
+          email: string
+          name: string
+          notify_email: boolean | null
+          notify_sms: boolean | null
+          notify_slack: boolean | null
+          phone: string | null
+          slack_user_id: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          email: string
+          name: string
+          notify_email?: boolean | null
+          notify_sms?: boolean | null
+          notify_slack?: boolean | null
+          phone?: string | null
+          slack_user_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          email?: string
+          name?: string
+          notify_email?: boolean | null
+          notify_sms?: boolean | null
+          notify_slack?: boolean | null
+          phone?: string | null
+          slack_user_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       check_ins: {
         Row: {
           check_in_method: string
@@ -20,10 +125,12 @@ export type Database = {
           host_notified_at: string | null
           id: string
           kiosk_id: string | null
+          location: string | null
           member_id: string | null
           pass_id: string | null
           song_added: string | null
           status: string | null
+          visitor_name: string | null
           welcome_message: string | null
         }
         Insert: {
@@ -36,10 +143,12 @@ export type Database = {
           host_notified_at?: string | null
           id?: string
           kiosk_id?: string | null
+          location?: string | null
           member_id?: string | null
           pass_id?: string | null
           song_added?: string | null
           status?: string | null
+          visitor_name?: string | null
           welcome_message?: string | null
         }
         Update: {
@@ -52,10 +161,12 @@ export type Database = {
           host_notified_at?: string | null
           id?: string
           kiosk_id?: string | null
+          location?: string | null
           member_id?: string | null
           pass_id?: string | null
           song_added?: string | null
           status?: string | null
+          visitor_name?: string | null
           welcome_message?: string | null
         }
         Relationships: [

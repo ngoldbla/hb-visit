@@ -1,19 +1,21 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AttractMode } from "@/components/kiosk/attract-mode";
 import { QRScanner } from "@/components/kiosk/qr-scanner";
 import { SuccessScreen } from "@/components/kiosk/success-screen";
 import { ErrorScreen } from "@/components/kiosk/error-screen";
+import { createClient } from "@/lib/supabase/client";
 
-type KioskState = "attract" | "scanning" | "processing" | "success" | "error";
+type KioskState = "attract" | "scanning" | "processing" | "success" | "error" | "celebrating";
 
 interface CheckInResult {
   visitorName: string;
   hostName?: string;
   meetingRoom?: string;
   checkInTime: Date;
+  location?: string;
 }
 
 export default function KioskPage() {
@@ -77,6 +79,44 @@ export default function KioskPage() {
     setState("scanning");
   }, []);
 
+  // Subscribe to real-time check-ins from NFC taps
+  useEffect(() => {
+    const supabase = createClient();
+
+    const channel = supabase
+      .channel("nfc-checkins")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "check_ins",
+        },
+        (payload) => {
+          // Show celebration for NFC check-ins
+          if (payload.new && payload.new.check_in_method?.startsWith("nfc")) {
+            setCheckInResult({
+              visitorName: payload.new.visitor_name || "Visitor",
+              checkInTime: new Date(payload.new.check_in_time),
+              location: payload.new.location,
+            });
+            setState("celebrating");
+
+            // Return to attract mode after 5 seconds
+            setTimeout(() => {
+              setState("attract");
+              setCheckInResult(null);
+            }, 5000);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   return (
     <div className="h-screen w-screen flex items-center justify-center p-8">
       <AnimatePresence mode="wait">
@@ -113,6 +153,23 @@ export default function KioskPage() {
         {state === "success" && checkInResult && (
           <motion.div
             key="success"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.3 }}
+            className="w-full h-full"
+          >
+            <SuccessScreen
+              visitorName={checkInResult.visitorName}
+              hostName={checkInResult.hostName}
+              meetingRoom={checkInResult.meetingRoom}
+            />
+          </motion.div>
+        )}
+
+        {state === "celebrating" && checkInResult && (
+          <motion.div
+            key="celebrating"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
