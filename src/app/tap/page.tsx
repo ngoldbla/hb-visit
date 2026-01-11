@@ -1,0 +1,255 @@
+"use client";
+
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { startAuthentication } from "@simplewebauthn/browser";
+
+type TapStatus = "checking" | "authenticating" | "success" | "registering" | "error";
+
+const STORAGE_KEY = "hb_visitor_token";
+
+function TapPageContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const location = searchParams.get("loc") || "unknown";
+
+  const [status, setStatus] = useState<TapStatus>("checking");
+  const [visitorName, setVisitorName] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
+
+  const checkInWithToken = useCallback(async (token: string) => {
+    try {
+      const response = await fetch(`/api/tap/checkin?loc=${encodeURIComponent(location)}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Visitor-Token": token,
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setVisitorName(data.visitor_name);
+        setStatus("success");
+        return true;
+      }
+
+      return false;
+    } catch {
+      return false;
+    }
+  }, [location]);
+
+  const tryPasskeyAuth = useCallback(async () => {
+    try {
+      setStatus("authenticating");
+
+      // Get authentication options (discoverable credentials)
+      const optionsResponse = await fetch("/api/auth/passkey/authenticate");
+      const optionsData = await optionsResponse.json();
+
+      if (!optionsData.success) {
+        return false;
+      }
+
+      // Trigger browser passkey authentication
+      const authResponse = await startAuthentication({ optionsJSON: optionsData.options });
+
+      // Verify with server
+      const verifyResponse = await fetch("/api/auth/passkey/authenticate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ response: authResponse }),
+      });
+
+      const verifyData = await verifyResponse.json();
+
+      if (verifyData.success && verifyData.token) {
+        // Store the new token
+        localStorage.setItem(STORAGE_KEY, verifyData.token);
+
+        // Check in
+        setVisitorName(verifyData.visitorName);
+
+        // Create check-in record
+        await fetch(`/api/tap/checkin?loc=${encodeURIComponent(location)}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Visitor-Token": verifyData.token,
+          },
+        });
+
+        setStatus("success");
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error("Passkey auth failed:", error);
+      return false;
+    }
+  }, [location]);
+
+  useEffect(() => {
+    async function handleTap() {
+      // 1. Check for localStorage token
+      const token = localStorage.getItem(STORAGE_KEY);
+
+      if (token) {
+        const success = await checkInWithToken(token);
+        if (success) {
+          return;
+        }
+        // Token invalid, clear it
+        localStorage.removeItem(STORAGE_KEY);
+      }
+
+      // 2. Try passkey authentication
+      const passkeySuccess = await tryPasskeyAuth();
+      if (passkeySuccess) {
+        return;
+      }
+
+      // 3. Fall back to registration
+      setStatus("registering");
+    }
+
+    handleTap();
+  }, [checkInWithToken, tryPasskeyAuth]);
+
+  // Auto-redirect to registration after a moment
+  useEffect(() => {
+    if (status === "registering") {
+      const timer = setTimeout(() => {
+        router.push(`/tap/register?loc=${encodeURIComponent(location)}`);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [status, router, location]);
+
+  return (
+    <div className="min-h-screen bg-[#fff9e9] flex items-center justify-center p-4">
+      <AnimatePresence mode="wait">
+        {status === "checking" && (
+          <motion.div
+            key="checking"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-center"
+          >
+            <div className="w-16 h-16 border-4 border-[#2153ff] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-[#000824] text-lg">Checking in...</p>
+          </motion.div>
+        )}
+
+        {status === "authenticating" && (
+          <motion.div
+            key="authenticating"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-center"
+          >
+            <div className="w-20 h-20 bg-[#2153ff] rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+              </svg>
+            </div>
+            <p className="text-[#000824] text-lg">Verify with Face ID</p>
+            <p className="text-[#000824]/60 text-sm mt-1">to restore your check-in</p>
+          </motion.div>
+        )}
+
+        {status === "success" && (
+          <motion.div
+            key="success"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="text-center"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", delay: 0.1 }}
+              className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6"
+            >
+              <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </motion.div>
+            <h1 className="text-2xl font-bold text-[#000824] mb-2">
+              Welcome back, {visitorName}!
+            </h1>
+            <p className="text-[#000824]/60">You&apos;re checked in</p>
+            <p className="text-[#000824]/40 text-sm mt-4">
+              Location: {location}
+            </p>
+          </motion.div>
+        )}
+
+        {status === "registering" && (
+          <motion.div
+            key="registering"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-center"
+          >
+            <div className="w-16 h-16 border-4 border-[#2153ff] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-[#000824] text-lg">Setting up your check-in...</p>
+          </motion.div>
+        )}
+
+        {status === "error" && (
+          <motion.div
+            key="error"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="text-center"
+          >
+            <div className="w-24 h-24 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-[#000824] mb-2">
+              Something went wrong
+            </h1>
+            <p className="text-[#000824]/60 mb-6">{errorMessage}</p>
+            <button
+              onClick={() => router.push(`/tap/register?loc=${encodeURIComponent(location)}`)}
+              className="bg-[#2153ff] text-white px-6 py-3 rounded-lg font-medium"
+            >
+              Register to Check In
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-[#fff9e9] flex items-center justify-center p-4">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-[#2153ff] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-[#000824] text-lg">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function TapPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <TapPageContent />
+    </Suspense>
+  );
+}
