@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { useHoliday, type HolidayState, type HolidaySettings } from "@/hooks/use-holiday";
+import { createClient } from "@/lib/supabase/client";
 
 interface HolidayContextValue extends HolidayState {
   settings: HolidaySettings | null;
@@ -25,7 +26,7 @@ export function HolidayProvider({ children }: HolidayProviderProps) {
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
 
   // Fetch holiday settings from the API
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       const response = await fetch("/api/admin/settings");
       const data = await response.json();
@@ -59,12 +60,38 @@ export function HolidayProvider({ children }: HolidayProviderProps) {
     } finally {
       setIsLoadingSettings(false);
     }
-  };
+  }, []);
 
   // Initial fetch
   useEffect(() => {
     fetchSettings();
-  }, []);
+  }, [fetchSettings]);
+
+  // Subscribe to real-time settings changes for live updates from admin portal
+  useEffect(() => {
+    const supabase = createClient();
+
+    const channel = supabase
+      .channel("holiday-settings")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "kiosk_settings",
+          filter: "key=eq.holiday_config",
+        },
+        () => {
+          // Refetch settings when holiday_config is updated
+          fetchSettings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchSettings]);
 
   // Use the holiday hook with the fetched settings
   const holidayState = useHoliday(settings || undefined);
