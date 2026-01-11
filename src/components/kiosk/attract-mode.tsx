@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Nfc, Flame, Users, TrendingUp } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import Image from "next/image";
+import { useWakeLock } from "@/hooks/use-wake-lock";
 
 // The URL for NFC stickers and registration QR
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
@@ -118,6 +119,9 @@ function ProgressRing({ progress, size = 200 }: { progress: number; size?: numbe
 }
 
 export function AttractMode({ stats }: AttractModeProps) {
+  // Keep screen awake in kiosk mode
+  useWakeLock();
+
   const monthlyCount = stats?.monthlyCount ?? 0;
   const monthlyGoal = stats?.monthlyGoal ?? 1000;
   const progress = Math.min((monthlyCount / monthlyGoal) * 100, 100);
