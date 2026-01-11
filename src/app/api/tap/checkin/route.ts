@@ -174,7 +174,26 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Calculate new streak for check-in
+    // Check for recent check-in within 2 hours (overtap detection)
+    // This handles cases where someone taps multiple times without checking out
+    const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+    const twoHoursAgo = new Date(Date.now() - TWO_HOURS_MS).toISOString();
+
+    let isOvertap = false;
+    if (member?.id) {
+      const { data: recentCheckIn } = await supabase
+        .from("check_ins")
+        .select("id")
+        .eq("member_id", member.id)
+        .gte("check_in_time", twoHoursAgo)
+        .eq("is_overtap", false)
+        .limit(1)
+        .single();
+
+      isOvertap = !!recentCheckIn;
+    }
+
+    // Calculate new streak
     const { newStreak, isNewDay } = calculateStreak(
       member?.last_check_in ?? null,
       member?.current_streak ?? null
@@ -184,12 +203,13 @@ export async function POST(request: NextRequest) {
     const { count: todayCount } = await supabase
       .from("check_ins")
       .select("id", { count: "exact" })
-      .gte("check_in_time", todayStart.toISOString());
+      .gte("check_in_time", todayStart.toISOString())
+      .eq("is_overtap", false);
 
     const arrivalPosition = (todayCount || 0) + 1;
 
-    // Update member streak, total check-ins, and nickname if it's a new day
-    if (member && isNewDay) {
+    // Update member streak, total check-ins, and nickname if it's a new day AND not an overtap
+    if (member && isNewDay && !isOvertap) {
       const newLongest = Math.max(newStreak, member.longest_streak || 0);
 
       // Calculate personality nickname from last 30 days of check-ins
@@ -220,7 +240,7 @@ export async function POST(request: NextRequest) {
         .eq("id", member.id);
     }
 
-    // Create check-in record
+    // Create check-in record (always created, but marked as overtap if within 2 hours)
     const { data: checkIn, error: checkInError } = await supabase
       .from("check_ins")
       .insert({
@@ -230,7 +250,8 @@ export async function POST(request: NextRequest) {
         visitor_name: visitorName,
         member_id: member?.id,
         status: "checked_in",
-        arrival_position: arrivalPosition,
+        arrival_position: isOvertap ? null : arrivalPosition,
+        is_overtap: isOvertap,
       })
       .select("id")
       .single();
@@ -243,7 +264,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get current month's check-in count for community goal
+    // Get current month's check-in count for community goal (excluding overtaps)
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
@@ -251,7 +272,8 @@ export async function POST(request: NextRequest) {
     const { count: monthlyCount } = await supabase
       .from("check_ins")
       .select("id", { count: "exact" })
-      .gte("check_in_time", startOfMonth.toISOString());
+      .gte("check_in_time", startOfMonth.toISOString())
+      .eq("is_overtap", false);
 
     // Update community goal count
     await supabase
@@ -268,9 +290,10 @@ export async function POST(request: NextRequest) {
       visitor_email: visitorEmail,
       avatar_emoji: member?.avatar_emoji || "😊",
       location,
-      streak: newStreak,
-      arrival_position: arrivalPosition,
+      streak: isOvertap ? (member?.current_streak ?? 1) : newStreak,
+      arrival_position: isOvertap ? null : arrivalPosition,
       monthly_count: monthlyCount || 0,
+      is_overtap: isOvertap,
       message: `Welcome back, ${visitorName}!`,
     });
   } catch (error) {

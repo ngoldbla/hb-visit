@@ -9,6 +9,7 @@ import {
   playHappyBeep,
   playStreakChirp,
   playMilestoneSequence,
+  triggerHapticSuccess,
 } from "@/lib/audio";
 
 interface SuccessScreenProps {
@@ -276,11 +277,11 @@ export function SuccessScreen({
   const isNewStreak = streak === 1;
   const isMilestoneCheckIn = monthlyCount % 50 === 0;
 
-  // Play R2-D2 celebration sounds
+  // Play R2-D2 celebration sounds and haptics
   useEffect(() => {
     let cancelled = false;
 
-    async function playCelebrationSound() {
+    async function playCelebration() {
       try {
         await unlockAudio();
       } catch {
@@ -288,6 +289,9 @@ export function SuccessScreen({
       }
 
       if (cancelled) return;
+
+      // Trigger haptic feedback immediately
+      triggerHapticSuccess();
 
       // Small delay to sync with animation
       setTimeout(() => {
@@ -302,7 +306,7 @@ export function SuccessScreen({
       }, 200);
     }
 
-    playCelebrationSound();
+    playCelebration();
 
     return () => {
       cancelled = true;

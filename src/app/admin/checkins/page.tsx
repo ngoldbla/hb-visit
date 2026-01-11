@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Download } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 interface CheckIn {
@@ -24,6 +24,7 @@ interface CheckIn {
   status: string | null;
   visitor_name: string | null;
   location: string | null;
+  is_overtap: boolean | null;
 }
 
 export default function CheckInsPage() {
@@ -43,7 +44,8 @@ export default function CheckInsPage() {
         duration_minutes,
         status,
         visitor_name,
-        location
+        location,
+        is_overtap
       `)
       .order("check_in_time", { ascending: false })
       .limit(100);
@@ -84,10 +86,19 @@ export default function CheckInsPage() {
             View visitor check-in and check-out activity
           </p>
         </div>
-        <Button variant="outline" onClick={fetchCheckIns} disabled={loading}>
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => window.location.href = "/api/admin/export/checkins"}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+          <Button variant="outline" onClick={fetchCheckIns} disabled={loading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -120,9 +131,16 @@ export default function CheckInsPage() {
               checkIns.map((checkIn) => (
                 <TableRow key={checkIn.id}>
                   <TableCell>
-                    <p className="font-medium">
-                      {checkIn.visitor_name || "Unknown Visitor"}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">
+                        {checkIn.visitor_name || "Unknown Visitor"}
+                      </p>
+                      {checkIn.is_overtap && (
+                        <Badge className="bg-amber-100 text-amber-800 text-xs">
+                          Overtap
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>{checkIn.location || "-"}</TableCell>
                   <TableCell>{formatDateTime(checkIn.check_in_time)}</TableCell>

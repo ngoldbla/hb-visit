@@ -58,19 +58,21 @@ export default function CommunityPage() {
         .eq("goal_type", "monthly_checkins")
         .single(),
 
-      // Get top streak leaders
+      // Get top streak leaders (only active members)
       supabase
         .from("members")
         .select("name, current_streak, longest_streak")
         .gt("current_streak", 0)
+        .neq("is_active", false)
         .order("current_streak", { ascending: false })
         .limit(5),
 
-      // Get monthly check-in count
+      // Get monthly check-in count (excluding overtaps)
       supabase
         .from("check_ins")
         .select("id, member_id", { count: "exact" })
-        .gte("check_in_time", startOfMonth.toISOString()),
+        .gte("check_in_time", startOfMonth.toISOString())
+        .eq("is_overtap", false),
     ]);
 
     if (goalResult.data) {
