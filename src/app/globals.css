@@ -115,6 +115,19 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Admin sidebar - dark navy theme (#000824) */
+.admin-sidebar {
+  --sidebar: oklch(0.05 0.02 260);
+  --sidebar-foreground: oklch(1 0 0);
+  --sidebar-primary: oklch(1 0 0);
+  --sidebar-primary-foreground: oklch(0.05 0.02 260);
+  --sidebar-accent: oklch(1 0 0 / 10%);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(1 0 0 / 20%);
+  --sidebar-muted-foreground: oklch(1 0 0 / 60%);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
