@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { UserCheck, Users, Clock, Target, Flame, TrendingUp } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { formatDisplayName } from "@/lib/utils";
 
 interface Stats {
   todayCheckIns: number;
@@ -70,7 +71,9 @@ export default function AdminDashboard() {
         monthlyCount: monthlyCheckIns.count || 0,
         monthlyGoal: goal.data?.target_count || 1000,
         topStreak: topStreak.data?.current_streak || 0,
-        topStreakName: topStreak.data?.name?.split(" ")[0] || null,
+        topStreakName: topStreak.data?.name
+          ? formatDisplayName(topStreak.data.name)
+          : null,
       });
       setLoading(false);
     }
