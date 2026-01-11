@@ -3,5 +3,5 @@
  */
 
 export { getAudioContext, unlockAudio, isAudioUnlocked, isAudioReady } from "./audio-context";
-export { playHappyBeep, playStreakChirp, playMilestoneSequence, playMobileChime } from "./sounds";
+export { playHappyBeep, playStreakChirp, playMilestoneSequence, playMobileChime, playFarewellChirp, playMobileFarewell } from "./sounds";
 export { triggerHapticSuccess, triggerHapticTap } from "./haptics";
