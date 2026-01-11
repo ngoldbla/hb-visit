@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AttractCycleManager } from "@/components/kiosk/attract-cycle-manager";
 import { SuccessScreen } from "@/components/kiosk/success-screen";
+import { MobileExplainer } from "@/components/kiosk/mobile-explainer";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { createClient } from "@/lib/supabase/client";
 
 type KioskState = "attract" | "celebrating";
@@ -23,6 +25,7 @@ interface CheckInResult {
 }
 
 export default function KioskPage() {
+  const isMobile = useIsMobile();
   const [state, setState] = useState<KioskState>("attract");
   const [checkInResult, setCheckInResult] = useState<CheckInResult | null>(null);
   const [celebrationStats, setCelebrationStats] = useState<CelebrationStats>({
@@ -116,6 +119,11 @@ export default function KioskPage() {
       supabase.removeChannel(channel);
     };
   }, [fetchCelebrationStats, celebrationStats.monthlyCount, celebrationStats.monthlyGoal]);
+
+  // Show mobile explainer on small screens
+  if (isMobile) {
+    return <MobileExplainer />;
+  }
 
   return (
     <div className="h-screen w-screen overflow-hidden">
