@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { validateDeviceToken } from "@/lib/auth/tokens";
 import { calculateNicknameFromTimestamps } from "@/lib/nicknames";
+import { buildBadgeContext, evaluateAndAwardBadges, EarnedBadge } from "@/lib/badges";
 
 // Calculate streak based on last check-in date
 function calculateStreak(lastCheckIn: string | null, currentStreak: number | null): { newStreak: number; isNewDay: boolean } {
@@ -208,9 +209,13 @@ export async function POST(request: NextRequest) {
 
     const arrivalPosition = (todayCount || 0) + 1;
 
+    // Track newly earned badges
+    let newBadges: EarnedBadge[] = [];
+
     // Update member streak, total check-ins, and nickname if it's a new day AND not an overtap
     if (member && isNewDay && !isOvertap) {
       const newLongest = Math.max(newStreak, member.longest_streak || 0);
+      const newTotalCheckIns = (member.total_check_ins || 0) + 1;
 
       // Calculate personality nickname from last 30 days of check-ins
       const thirtyDaysAgo = new Date();
@@ -234,10 +239,19 @@ export async function POST(request: NextRequest) {
           current_streak: newStreak,
           longest_streak: newLongest,
           last_check_in: new Date().toISOString().split("T")[0],
-          total_check_ins: (member.total_check_ins || 0) + 1,
+          total_check_ins: newTotalCheckIns,
           personality_nickname: nicknameResult.nickname,
         })
         .eq("id", member.id);
+
+      // Evaluate and award badges
+      const badgeContext = await buildBadgeContext(
+        supabase,
+        member.id,
+        newStreak,
+        newTotalCheckIns
+      );
+      newBadges = await evaluateAndAwardBadges(supabase, member.id, badgeContext);
     }
 
     // Create check-in record (always created, but marked as overtap if within 2 hours)
@@ -294,6 +308,7 @@ export async function POST(request: NextRequest) {
       arrival_position: isOvertap ? null : arrivalPosition,
       monthly_count: monthlyCount || 0,
       is_overtap: isOvertap,
+      new_badges: newBadges,
       message: `Welcome back, ${visitorName}!`,
     });
   } catch (error) {

@@ -53,17 +53,21 @@ function TapPageContent() {
         setVisitorName(data.visitor_name);
         setAvatarEmoji(data.avatar_emoji || "😊");
 
-        // Haptic and audio feedback (fail silently)
+        // Haptic and audio feedback (fire and forget - don't block on audio)
         try {
           triggerHapticSuccess();
-          await unlockAudio();
-          if (data.action === "checkout") {
-            playMobileFarewell();
-          } else {
-            playMobileChime();
-          }
+          // Don't await unlockAudio - it can hang on iOS without user gesture
+          unlockAudio().then(() => {
+            if (data.action === "checkout") {
+              playMobileFarewell();
+            } else {
+              playMobileChime();
+            }
+          }).catch(() => {
+            // Audio not available, ignore
+          });
         } catch {
-          // Audio/haptic not available, continue
+          // Haptic not available, continue
         }
 
         if (data.action === "checkout") {
@@ -134,13 +138,14 @@ function TapPageContent() {
 
         setStatus("success");
 
-        // Haptic and audio feedback (fail silently)
+        // Haptic and audio feedback (fire and forget)
         try {
           triggerHapticSuccess();
-          await unlockAudio();
-          playMobileChime();
+          unlockAudio().then(() => {
+            playMobileChime();
+          }).catch(() => {});
         } catch {
-          // Audio/haptic not available, continue
+          // Haptic not available, continue
         }
 
         return true;
@@ -297,6 +302,15 @@ function TapPageContent() {
             <p className="text-[#000824]/40 text-sm mt-4">
               Location: {location}
             </p>
+            <motion.button
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              onClick={() => router.push("/stats")}
+              className="mt-6 bg-[#000824] text-white px-6 py-3 rounded-xl font-medium hover:bg-[#000824]/90 transition-colors"
+            >
+              View Your Stats
+            </motion.button>
           </motion.div>
         )}
 
@@ -333,6 +347,15 @@ function TapPageContent() {
                 {checkoutData.durationMessage}
               </p>
             </div>
+            <motion.button
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              onClick={() => router.push("/stats")}
+              className="mt-6 bg-[#000824] text-white px-6 py-3 rounded-xl font-medium hover:bg-[#000824]/90 transition-colors"
+            >
+              View Your Stats
+            </motion.button>
           </motion.div>
         )}
 

@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, ClipboardList, Users, Target, LogOut } from "lucide-react";
+import { Home, ClipboardList, Users, Target, Quote, Settings, LogOut } from "lucide-react";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: Home },
   { href: "/admin/checkins", label: "Check-Ins", icon: ClipboardList },
   { href: "/admin/members", label: "Members", icon: Users },
   { href: "/admin/community", label: "Community", icon: Target },
+  { href: "/admin/quotes", label: "Quotes", icon: Quote },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 export default function AdminLayout({

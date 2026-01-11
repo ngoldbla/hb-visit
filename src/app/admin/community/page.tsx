@@ -20,6 +20,7 @@ interface CommunityGoal {
 
 interface StreakLeader {
   name: string;
+  avatar_emoji: string | null;
   current_streak: number | null;
   longest_streak: number | null;
 }
@@ -61,7 +62,7 @@ export default function CommunityPage() {
       // Get top streak leaders (only active members)
       supabase
         .from("members")
-        .select("name, current_streak, longest_streak")
+        .select("name, avatar_emoji, current_streak, longest_streak")
         .gt("current_streak", 0)
         .neq("is_active", false)
         .order("current_streak", { ascending: false })
@@ -363,11 +364,14 @@ export default function CommunityPage() {
                   >
                     {i + 1}
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{leader.name}</p>
-                    <p className="text-sm text-gray-500">
-                      Best: {leader.longest_streak} days
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">{leader.avatar_emoji || "😊"}</span>
+                    <div>
+                      <p className="font-medium text-gray-900">{leader.name}</p>
+                      <p className="text-sm text-gray-500">
+                        Best: {leader.longest_streak} days
+                      </p>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
