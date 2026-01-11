@@ -13,7 +13,7 @@ const REGISTRATION_URL = `${SITE_URL}/tap?loc=kiosk`;
 interface CommunityStats {
   monthlyCount: number;
   monthlyGoal: number;
-  recentCheckIns: Array<{ name: string; time: string }>;
+  recentCheckIns: Array<{ name: string; time: string; emoji: string | null }>;
   topStreak: number;
 }
 
@@ -293,7 +293,11 @@ export function AttractMode({ stats }: AttractModeProps) {
                   className="flex items-center gap-3 bg-[#fff9e9] rounded-xl px-4 py-3"
                 >
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#ffc421] to-[#ff9d00] flex items-center justify-center text-[#000824] font-bold text-sm">
-                    {checkIn.name.charAt(0).toUpperCase()}
+                    {checkIn.emoji ? (
+                      <span className="text-xl">{checkIn.emoji}</span>
+                    ) : (
+                      checkIn.name.charAt(0).toUpperCase()
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[#000824] font-medium truncate">

@@ -15,6 +15,7 @@ export interface Quote {
 interface QuoteCycleProps {
   quotes: Quote[];
   displayDuration?: number; // milliseconds, default 8000
+  onSkip?: () => void; // callback to skip to stats screen
 }
 
 // Floating particles background
@@ -56,7 +57,7 @@ function ParticleBackground() {
   );
 }
 
-export function QuoteCycle({ quotes, displayDuration = 8000 }: QuoteCycleProps) {
+export function QuoteCycle({ quotes, displayDuration = 8000, onSkip }: QuoteCycleProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -76,7 +77,10 @@ export function QuoteCycle({ quotes, displayDuration = 8000 }: QuoteCycleProps) 
   const currentQuote = quotes[currentIndex];
 
   return (
-    <div className="h-full bg-[#fff9e9] flex flex-col relative overflow-hidden">
+    <div
+      className="h-full bg-[#fff9e9] flex flex-col relative overflow-hidden cursor-pointer touch-auto"
+      onClick={onSkip}
+    >
       <ParticleBackground />
 
       {/* Header with logo */}
@@ -176,16 +180,33 @@ export function QuoteCycle({ quotes, displayDuration = 8000 }: QuoteCycleProps) 
         </div>
       )}
 
-      {/* Subtle instruction */}
+      {/* Tap to continue instruction */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
-        className="absolute bottom-4 left-0 right-0 text-center"
+        className="absolute bottom-6 left-0 right-0 text-center"
       >
-        <p className="text-[#333]/20 text-sm">
-          Tap an NFC checkpoint to check in
-        </p>
+        <motion.div
+          animate={{ opacity: [0.4, 0.7, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="flex items-center justify-center gap-2"
+        >
+          <span className="text-[#333]/40 text-sm">Tap anywhere to continue</span>
+          <svg
+            className="w-4 h-4 text-[#333]/40"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </motion.div>
       </motion.div>
     </div>
   );

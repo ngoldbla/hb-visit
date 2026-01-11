@@ -17,7 +17,7 @@ export interface CycleConfig {
 interface CommunityStats {
   monthlyCount: number;
   monthlyGoal: number;
-  recentCheckIns: Array<{ name: string; time: string }>;
+  recentCheckIns: Array<{ name: string; time: string; emoji: string | null }>;
   topStreak: number;
 }
 
@@ -91,7 +91,7 @@ export function AttractCycleManager() {
         .eq("is_overtap", false),
       supabase
         .from("check_ins")
-        .select("visitor_name, check_in_time")
+        .select("visitor_name, check_in_time, members(avatar_emoji)")
         .gte("check_in_time", todayStart.toISOString())
         .eq("is_overtap", false)
         .order("check_in_time", { ascending: false })
@@ -120,6 +120,7 @@ export function AttractCycleManager() {
           minute: "2-digit",
           hour12: true,
         }),
+        emoji: c.members?.avatar_emoji || null,
       })),
       topStreak: streakResult.data?.current_streak || 0,
     });
@@ -172,6 +173,13 @@ export function AttractCycleManager() {
     }
   }, [enabledPanels, activePanel]);
 
+  // Handler to skip from quotes to stats screen
+  const handleSkipToStats = useCallback(() => {
+    if (activePanel === "quotes") {
+      setActivePanel("stats");
+    }
+  }, [activePanel]);
+
   // If no panels enabled, show stats as fallback
   if (enabledPanels.length === 0) {
     return <AttractMode stats={communityStats} />;
@@ -200,7 +208,7 @@ export function AttractCycleManager() {
           transition={{ duration: 0.5 }}
           className="h-full"
         >
-          <QuoteCycle quotes={quotes} displayDuration={8000} />
+          <QuoteCycle quotes={quotes} displayDuration={8000} onSkip={handleSkipToStats} />
         </motion.div>
       )}
     </AnimatePresence>
