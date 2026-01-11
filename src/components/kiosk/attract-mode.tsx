@@ -5,6 +5,9 @@ import { Nfc, Flame, Users, TrendingUp } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import Image from "next/image";
 import { useWakeLock } from "@/hooks/use-wake-lock";
+import { useHolidayTheme, getDefaultTheme } from "@/lib/holidays";
+import { ThemedParticles } from "./themed-particles";
+import { ThemeOverlay } from "./theme-overlay";
 
 // The URL for NFC stickers and registration QR
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
@@ -35,51 +38,25 @@ function AnimatedCounter({ value, suffix = "" }: { value: number; suffix?: strin
   );
 }
 
-// Floating particles background - golden yellow theme
-function ParticleBackground() {
-  const particles = Array.from({ length: 25 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 6 + 3,
-    duration: Math.random() * 20 + 15,
-    delay: Math.random() * 5,
-  }));
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((p) => (
-        <motion.div
-          key={p.id}
-          className="absolute rounded-full bg-[#ffc421]/30"
-          style={{
-            width: p.size,
-            height: p.size,
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-          }}
-          animate={{
-            y: [0, -30, 0],
-            opacity: [0.2, 0.5, 0.2],
-          }}
-          transition={{
-            duration: p.duration,
-            repeat: Infinity,
-            delay: p.delay,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// Progress ring component - yellow/gold gradient
-function ProgressRing({ progress, size = 200 }: { progress: number; size?: number }) {
+// Progress ring component with dynamic colors
+function ProgressRing({
+  progress,
+  size = 200,
+  primaryColor = "#ffc421",
+  secondaryColor = "#ff9d00",
+}: {
+  progress: number;
+  size?: number;
+  primaryColor?: string;
+  secondaryColor?: string;
+}) {
   const strokeWidth = 8;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (progress / 100) * circumference;
+
+  // Use unique gradient ID based on colors to avoid conflicts
+  const gradientId = `progressGradient-${primaryColor.replace("#", "")}-${secondaryColor.replace("#", "")}`;
 
   return (
     <svg width={size} height={size} className="transform -rotate-90">
@@ -98,7 +75,7 @@ function ProgressRing({ progress, size = 200 }: { progress: number; size?: numbe
         cy={size / 2}
         r={radius}
         fill="none"
-        stroke="url(#progressGradientYellow)"
+        stroke={`url(#${gradientId})`}
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         initial={{ strokeDashoffset: circumference }}
@@ -109,9 +86,9 @@ function ProgressRing({ progress, size = 200 }: { progress: number; size?: numbe
         }}
       />
       <defs>
-        <linearGradient id="progressGradientYellow" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#ffc421" />
-          <stop offset="100%" stopColor="#ff9d00" />
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor={primaryColor} />
+          <stop offset="100%" stopColor={secondaryColor} />
         </linearGradient>
       </defs>
     </svg>
@@ -122,6 +99,15 @@ export function AttractMode({ stats }: AttractModeProps) {
   // Keep screen awake in kiosk mode
   useWakeLock();
 
+  // Get holiday theme (or default)
+  const theme = useHolidayTheme() || getDefaultTheme();
+  const colors = theme.colors;
+
+  // Parse background (could be gradient or solid color)
+  const bgStyle = colors.background.startsWith("linear-gradient")
+    ? { background: colors.background }
+    : { backgroundColor: colors.background };
+
   const monthlyCount = stats?.monthlyCount ?? 0;
   const monthlyGoal = stats?.monthlyGoal ?? 1000;
   const progress = Math.min((monthlyCount / monthlyGoal) * 100, 100);
@@ -129,8 +115,11 @@ export function AttractMode({ stats }: AttractModeProps) {
   const topStreak = stats?.topStreak ?? 0;
 
   return (
-    <div className="h-full bg-[#fff9e9] flex flex-col relative overflow-hidden">
-      <ParticleBackground />
+    <div className="h-full flex flex-col relative overflow-hidden" style={bgStyle}>
+      <ThemedParticles theme={theme} />
+      {theme.decorations.overlay && (
+        <ThemeOverlay overlay={theme.decorations.overlay} respectful={theme.respectful} />
+      )}
 
       {/* Header with official logo */}
       <motion.header
@@ -159,9 +148,14 @@ export function AttractMode({ stats }: AttractModeProps) {
           className="bg-white rounded-3xl p-6 flex flex-col items-center justify-center shadow-lg shadow-black/5 border border-black/5"
         >
           <div className="relative">
-            <ProgressRing progress={progress} size={180} />
+            <ProgressRing
+              progress={progress}
+              size={180}
+              primaryColor={colors.primary}
+              secondaryColor={colors.secondary}
+            />
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-5xl font-bold text-[#000824]">
+              <span className="text-5xl font-bold" style={{ color: colors.text }}>
                 <AnimatedCounter value={monthlyCount} />
               </span>
               <span className="text-[#333]/50 text-sm">check-ins</span>
@@ -170,10 +164,10 @@ export function AttractMode({ stats }: AttractModeProps) {
 
           <div className="mt-6 text-center">
             <p className="text-[#333]/70 text-lg">
-              Help us reach <span className="text-[#000824] font-bold">{monthlyGoal.toLocaleString()}</span> this month!
+              Help us reach <span className="font-bold" style={{ color: colors.text }}>{monthlyGoal.toLocaleString()}</span> this month!
             </p>
             <div className="flex items-center justify-center gap-2 mt-3">
-              <Users className="w-5 h-5 text-[#ffc421]" />
+              <Users className="w-5 h-5" style={{ color: colors.primary }} />
               <span className="text-[#333]/50">
                 {Math.round(progress)}% of goal
               </span>
@@ -186,12 +180,17 @@ export function AttractMode({ stats }: AttractModeProps) {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 }}
-              className="mt-6 bg-gradient-to-r from-[#ffc421]/20 to-orange-400/20 rounded-full px-5 py-3 border border-[#ffc421]/40"
+              className="mt-6 rounded-full px-5 py-3"
+              style={{
+                background: `linear-gradient(to right, ${colors.primary}33, ${colors.secondary}33)`,
+                borderWidth: 1,
+                borderColor: `${colors.primary}66`,
+              }}
             >
               <div className="flex items-center gap-2">
-                <Flame className="w-5 h-5 text-orange-500" />
+                <Flame className="w-5 h-5" style={{ color: colors.secondary }} />
                 <span className="text-[#333]/80 text-sm">
-                  Someone is on a <span className="text-orange-500 font-bold">{topStreak}-day</span> streak!
+                  Someone is on a <span className="font-bold" style={{ color: colors.secondary }}>{topStreak}-day</span> streak!
                 </span>
               </div>
             </motion.div>
@@ -211,9 +210,9 @@ export function AttractMode({ stats }: AttractModeProps) {
               animate={{
                 scale: [1, 1.03, 1],
                 boxShadow: [
-                  "0 8px 32px rgba(255, 196, 33, 0.3)",
-                  "0 12px 48px rgba(255, 196, 33, 0.5)",
-                  "0 8px 32px rgba(255, 196, 33, 0.3)",
+                  `0 8px 32px ${colors.primary}4D`,
+                  `0 12px 48px ${colors.primary}80`,
+                  `0 8px 32px ${colors.primary}4D`,
                 ],
               }}
               transition={{
@@ -221,11 +220,18 @@ export function AttractMode({ stats }: AttractModeProps) {
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
-              className="w-40 h-40 rounded-[2rem] bg-gradient-to-br from-[#ffc421] to-[#ffaa00] flex items-center justify-center mx-auto border-4 border-white"
+              className="w-40 h-40 rounded-[2rem] flex items-center justify-center mx-auto border-4 border-white"
+              style={{
+                background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.secondary})`,
+              }}
             >
-              <Nfc className="w-20 h-20 text-[#000824]" />
+              {theme.decorations.iconEmoji ? (
+                <span className="text-6xl">{theme.decorations.iconEmoji}</span>
+              ) : (
+                <Nfc className="w-20 h-20" style={{ color: colors.text }} />
+              )}
             </motion.div>
-            <h2 className="text-3xl font-bold text-[#000824] mt-6">
+            <h2 className="text-3xl font-bold mt-6" style={{ color: colors.text }}>
               Tap a Checkpoint
             </h2>
             <p className="text-[#333]/50 text-lg mt-2">
@@ -244,7 +250,7 @@ export function AttractMode({ stats }: AttractModeProps) {
           <div className="text-center">
             <motion.div
               animate={{
-                borderColor: ["rgba(0,0,0,0.1)", "rgba(255,196,33,0.6)", "rgba(0,0,0,0.1)"],
+                borderColor: ["rgba(0,0,0,0.1)", `${colors.primary}99`, "rgba(0,0,0,0.1)"],
               }}
               transition={{
                 duration: 3,
@@ -258,7 +264,7 @@ export function AttractMode({ stats }: AttractModeProps) {
                 size={120}
                 level="M"
                 bgColor="transparent"
-                fgColor="#000824"
+                fgColor={colors.text}
               />
             </motion.div>
             <h3 className="text-xl font-semibold text-[#333]/80 mt-4">
@@ -278,7 +284,7 @@ export function AttractMode({ stats }: AttractModeProps) {
           className="bg-white rounded-3xl p-6 shadow-lg shadow-black/5 border border-black/5 flex flex-col"
         >
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-[#ffc421]" />
+            <TrendingUp className="w-5 h-5" style={{ color: colors.primary }} />
             <h3 className="text-[#333]/70 font-semibold">Recent Activity</h3>
           </div>
 
@@ -290,9 +296,16 @@ export function AttractMode({ stats }: AttractModeProps) {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.5 + i * 0.1 }}
-                  className="flex items-center gap-3 bg-[#fff9e9] rounded-xl px-4 py-3"
+                  className="flex items-center gap-3 rounded-xl px-4 py-3"
+                  style={{ backgroundColor: `${colors.primary}15` }}
                 >
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#ffc421] to-[#ff9d00] flex items-center justify-center text-[#000824] font-bold text-sm">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm"
+                    style={{
+                      background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.secondary})`,
+                      color: colors.text,
+                    }}
+                  >
                     {checkIn.emoji ? (
                       <span className="text-xl">{checkIn.emoji}</span>
                     ) : (
@@ -300,14 +313,17 @@ export function AttractMode({ stats }: AttractModeProps) {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[#000824] font-medium truncate">
+                    <p className="font-medium truncate" style={{ color: colors.text }}>
                       {checkIn.name}
                     </p>
                     <p className="text-[#333]/40 text-sm">
                       {checkIn.time}
                     </p>
                   </div>
-                  <div className="w-2 h-2 rounded-full bg-[#ffc421] animate-pulse" />
+                  <div
+                    className="w-2 h-2 rounded-full animate-pulse"
+                    style={{ backgroundColor: colors.primary }}
+                  />
                 </motion.div>
               ))
             ) : (

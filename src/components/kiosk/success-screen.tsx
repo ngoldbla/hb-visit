@@ -11,6 +11,9 @@ import {
   playMilestoneSequence,
   triggerHapticSuccess,
 } from "@/lib/audio";
+import { useHolidayTheme, getWelcomeMessage, getDefaultTheme, type HolidayTheme } from "@/lib/holidays";
+import { ThemedParticles } from "./themed-particles";
+import { ThemeOverlay } from "./theme-overlay";
 
 interface SuccessScreenProps {
   visitorName: string;
@@ -20,10 +23,13 @@ interface SuccessScreenProps {
   location?: string;
 }
 
-// Enhanced confetti with brand colors
-function Confetti() {
-  const colors = ["#ffc421", "#000824", "#2153ff", "#ff9d00", "#ffaa00", "#ffd700"];
-  const pieces = Array.from({ length: 80 }, (_, i) => ({
+// Enhanced confetti with theme colors
+function Confetti({ theme }: { theme: HolidayTheme }) {
+  const colors = theme.particles.colors;
+  const isRespectful = theme.respectful ?? false;
+  const count = isRespectful ? 40 : 80;
+
+  const pieces = Array.from({ length: count }, (_, i) => ({
     id: i,
     x: Math.random() * 100,
     delay: Math.random() * 0.3,
@@ -52,7 +58,7 @@ function Confetti() {
             scale: [0, 1, 1, 0.5]
           }}
           transition={{
-            duration: 3 + Math.random() * 2,
+            duration: isRespectful ? 5 : 3 + Math.random() * 2,
             delay: piece.delay,
             ease: [0.23, 1, 0.32, 1],
           }}
@@ -70,55 +76,19 @@ function Confetti() {
   );
 }
 
-// Radial burst effect - yellow/gold theme
-function BurstEffect() {
+// Radial burst effect with theme colors
+function BurstEffect({ theme }: { theme: HolidayTheme }) {
+  const colors = theme.colors;
   return (
     <motion.div
       initial={{ scale: 0, opacity: 0.8 }}
       animate={{ scale: 4, opacity: 0 }}
       transition={{ duration: 1, ease: "easeOut" }}
-      className="absolute w-32 h-32 rounded-full bg-gradient-to-r from-[#ffc421] to-[#ff9d00]"
+      className="absolute w-32 h-32 rounded-full"
+      style={{
+        background: `linear-gradient(to right, ${colors.primary}, ${colors.secondary})`,
+      }}
     />
-  );
-}
-
-// Floating particles background - golden yellow
-function CelebrationParticles() {
-  const particles = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 6 + 3,
-    duration: Math.random() * 3 + 2,
-    delay: Math.random() * 2,
-  }));
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((p) => (
-        <motion.div
-          key={p.id}
-          className="absolute rounded-full bg-[#ffc421]"
-          style={{
-            width: p.size,
-            height: p.size,
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-          }}
-          animate={{
-            y: [0, -50, 0],
-            opacity: [0, 0.6, 0],
-            scale: [0.5, 1.2, 0.5],
-          }}
-          transition={{
-            duration: p.duration,
-            repeat: Infinity,
-            delay: p.delay,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
-    </div>
   );
 }
 
@@ -257,6 +227,15 @@ export function SuccessScreen({
   const [showConfetti, setShowConfetti] = useState(true);
   const [showBurst, setShowBurst] = useState(true);
 
+  // Get holiday theme (or default)
+  const theme = useHolidayTheme() || getDefaultTheme();
+  const colors = theme.colors;
+
+  // Parse background (could be gradient or solid color)
+  const bgStyle = colors.background.startsWith("linear-gradient")
+    ? { background: colors.background }
+    : { backgroundColor: colors.background };
+
   useEffect(() => {
     const confettiTimer = setTimeout(() => setShowConfetti(false), 4000);
     const burstTimer = setTimeout(() => setShowBurst(false), 1000);
@@ -276,6 +255,9 @@ export function SuccessScreen({
   const displayName = formatDisplayName(visitorName);
   const isNewStreak = streak === 1;
   const isMilestoneCheckIn = monthlyCount % 50 === 0;
+
+  // Get themed welcome message
+  const welcomeMessage = getWelcomeMessage(displayName, theme);
 
   // Play R2-D2 celebration sounds and haptics
   useEffect(() => {
@@ -314,9 +296,15 @@ export function SuccessScreen({
   }, [streak, isMilestoneCheckIn]);
 
   return (
-    <div className="h-full bg-[#fff9e9] flex flex-col items-center justify-center gap-6 px-8 relative overflow-hidden">
-      <CelebrationParticles />
-      {showConfetti && <Confetti />}
+    <div
+      className="h-full flex flex-col items-center justify-center gap-6 px-8 relative overflow-hidden"
+      style={bgStyle}
+    >
+      <ThemedParticles theme={theme} count={20} />
+      {theme.decorations.overlay && (
+        <ThemeOverlay overlay={theme.decorations.overlay} respectful={theme.respectful} />
+      )}
+      {showConfetti && <Confetti theme={theme} />}
 
       {/* Success icon with burst */}
       <motion.div
@@ -325,19 +313,26 @@ export function SuccessScreen({
         transition={{ type: "spring", stiffness: 200, damping: 15 }}
         className="relative"
       >
-        {showBurst && <BurstEffect />}
+        {showBurst && <BurstEffect theme={theme} />}
         <motion.div
           animate={{
             boxShadow: [
-              "0 0 0 0 rgba(255, 196, 33, 0.4)",
-              "0 0 60px 20px rgba(255, 196, 33, 0.2)",
-              "0 0 0 0 rgba(255, 196, 33, 0.4)",
+              `0 0 0 0 ${colors.glow || colors.primary}66`,
+              `0 0 60px 20px ${colors.glow || colors.primary}33`,
+              `0 0 0 0 ${colors.glow || colors.primary}66`,
             ],
           }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="w-36 h-36 rounded-full bg-gradient-to-br from-[#ffc421] to-[#ff9d00] flex items-center justify-center shadow-2xl"
+          className="w-36 h-36 rounded-full flex items-center justify-center shadow-2xl"
+          style={{
+            background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.secondary})`,
+          }}
         >
-          <CheckCircle2 className="w-20 h-20 text-[#000824]" />
+          {theme.decorations.iconEmoji ? (
+            <span className="text-6xl">{theme.decorations.iconEmoji}</span>
+          ) : (
+            <CheckCircle2 className="w-20 h-20" style={{ color: colors.text }} />
+          )}
         </motion.div>
       </motion.div>
 
@@ -348,8 +343,8 @@ export function SuccessScreen({
         transition={{ delay: 0.2 }}
         className="text-center"
       >
-        <h1 className="text-6xl font-bold text-[#000824] tracking-tight">
-          Welcome, {displayName}!
+        <h1 className="text-6xl font-bold tracking-tight" style={{ color: colors.text }}>
+          {welcomeMessage}
         </h1>
         {isMilestoneCheckIn && (
           <motion.div
@@ -358,9 +353,9 @@ export function SuccessScreen({
             transition={{ delay: 0.4 }}
             className="flex items-center justify-center gap-2 mt-3"
           >
-            <Trophy className="w-5 h-5 text-[#ffc421]" />
-            <span className="text-[#ffc421] font-semibold">Milestone check-in!</span>
-            <Trophy className="w-5 h-5 text-[#ffc421]" />
+            <Trophy className="w-5 h-5" style={{ color: colors.primary }} />
+            <span className="font-semibold" style={{ color: colors.primary }}>Milestone check-in!</span>
+            <Trophy className="w-5 h-5" style={{ color: colors.primary }} />
           </motion.div>
         )}
       </motion.div>
