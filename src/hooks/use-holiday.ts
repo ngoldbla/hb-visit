@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   getActiveHoliday,
   getHolidayById,
@@ -68,10 +68,10 @@ const DEFAULT_SETTINGS: HolidaySettings = {
 export function useHoliday(
   settings: Partial<HolidaySettings> = {}
 ): HolidayState {
-  const config = useMemo(
-    () => ({ ...DEFAULT_SETTINGS, ...settings }),
-    [settings]
-  );
+  // Compute config directly instead of memoizing to ensure it always reflects
+  // the latest settings. The operation is trivial, and useMemo can cause stale
+  // closures in the useCallback/useEffect dependency chain.
+  const config = { ...DEFAULT_SETTINGS, ...settings };
 
   const [state, setState] = useState<HolidayState>({
     holiday: null,
@@ -217,12 +217,16 @@ export function useHoliday(
     };
   }, [detectHoliday, getMsUntilMidnight]);
 
+  // Create stable key for array comparison (arrays are compared by reference)
+  const disabledHolidaysKey = JSON.stringify(config.disabledHolidays);
+
   // Re-detect when settings change
   useEffect(() => {
     detectHoliday();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     config.timezone,
-    config.disabledHolidays,
+    disabledHolidaysKey,
     config.previewHoliday,
     config.previewDay,
     detectHoliday,
