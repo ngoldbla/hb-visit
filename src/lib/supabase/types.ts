@@ -352,6 +352,33 @@ export type Database = {
         }
         Relationships: []
       }
+      locations: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          description: string | null
+          is_active: boolean
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          description?: string | null
+          is_active?: boolean
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          description?: string | null
+          is_active?: boolean
+          created_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

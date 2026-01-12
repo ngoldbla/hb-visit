@@ -12,7 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RefreshCw, Download } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { RefreshCw, Download, AlertTriangle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 interface CheckIn {
@@ -29,6 +35,7 @@ interface CheckIn {
 
 export default function CheckInsPage() {
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
+  const [knownLocations, setKnownLocations] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   async function fetchCheckIns() {
@@ -54,9 +61,25 @@ export default function CheckInsPage() {
     setLoading(false);
   }
 
+  async function fetchLocations() {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("locations")
+      .select("slug");
+
+    const slugs = new Set((data || []).map((l) => l.slug));
+    setKnownLocations(slugs);
+  }
+
   useEffect(() => {
     fetchCheckIns();
+    fetchLocations();
   }, []);
+
+  function isUnknownLocation(location: string | null): boolean {
+    if (!location) return false;
+    return knownLocations.size > 0 && !knownLocations.has(location);
+  }
 
   function formatDateTime(dateStr: string) {
     const date = new Date(dateStr);
@@ -142,7 +165,27 @@ export default function CheckInsPage() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>{checkIn.location || "-"}</TableCell>
+                  <TableCell>
+                    {checkIn.location ? (
+                      <div className="flex items-center gap-1">
+                        <span>{checkIn.location}</span>
+                        {isUnknownLocation(checkIn.location) && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Unknown location - not in Locations list</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
                   <TableCell>{formatDateTime(checkIn.check_in_time)}</TableCell>
                   <TableCell>
                     {checkIn.check_out_time
