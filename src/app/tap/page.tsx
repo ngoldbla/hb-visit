@@ -176,8 +176,8 @@ function TapPageContent() {
           setStatus("stale");
           return;
         }
-        // No token, show choice UI
-        setStatus("choice");
+        // No token, redirect to registration
+        router.push("/tap/register");
         return;
       }
 
@@ -193,13 +193,13 @@ function TapPageContent() {
         localStorage.removeItem(STORAGE_KEY);
       }
 
-      // 2. Show choice UI - let user decide whether to use passkey or register
-      // This prevents iOS from showing the native auth sheet on page load
-      setStatus("choice");
+      // 2. No token - redirect directly to registration
+      // Skip the choice screen and let users register immediately
+      router.push(`/tap/register?loc=${encodeURIComponent(location)}`);
     }
 
     handleTap();
-  }, [checkInWithToken, tryPasskeyAuth, location]);
+  }, [checkInWithToken, router, location]);
 
   // Auto-redirect to registration after a moment
   useEffect(() => {

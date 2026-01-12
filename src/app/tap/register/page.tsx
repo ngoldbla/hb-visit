@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useCallback, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { startRegistration } from "@simplewebauthn/browser";
+import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
 import { validateName } from "@/lib/validation/name-moderation";
 
 const STORAGE_KEY = "hb_visitor_token";
 
-type RegistrationStep = "form" | "passkey" | "success" | "error";
+type RegistrationStep = "form" | "passkey" | "success" | "error" | "authenticating";
 
 // Curated emoji options for avatars - fun and expressive
 const AVATAR_EMOJIS = [
@@ -45,6 +45,7 @@ function EmojiPicker({ selected, onSelect }: { selected: string; onSelect: (emoj
 
 function RegisterPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const location = searchParams.get("loc") || "unknown";
 
   const [step, setStep] = useState<RegistrationStep>("form");
@@ -55,6 +56,8 @@ function RegisterPageContent() {
   const [avatarEmoji, setAvatarEmoji] = useState("😊");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [authenticatedName, setAuthenticatedName] = useState("");
+  const [authenticatedEmoji, setAuthenticatedEmoji] = useState("😊");
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,6 +150,69 @@ function RegisterPageContent() {
       setIsSubmitting(false);
     }
   }, [name, email, phone, company, avatarEmoji, location]);
+
+  const handlePasskeyLogin = useCallback(async () => {
+    try {
+      setStep("authenticating");
+      setErrorMessage("");
+
+      // Get authentication options (discoverable credentials)
+      const optionsResponse = await fetch("/api/auth/passkey/authenticate");
+      const optionsData = await optionsResponse.json();
+
+      if (!optionsData.success) {
+        setErrorMessage("No passkey found. Please register below.");
+        setStep("form");
+        return;
+      }
+
+      // Trigger browser passkey authentication
+      const authResponse = await startAuthentication({ optionsJSON: optionsData.options });
+
+      // Verify with server
+      const verifyResponse = await fetch("/api/auth/passkey/authenticate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ response: authResponse }),
+      });
+
+      const verifyData = await verifyResponse.json();
+
+      if (verifyData.success && verifyData.token) {
+        // Store the new token
+        localStorage.setItem(STORAGE_KEY, verifyData.token);
+        setAuthenticatedName(verifyData.visitorName);
+        setAuthenticatedEmoji(verifyData.avatarEmoji || "😊");
+
+        // Create check-in record
+        const checkinResponse = await fetch(`/api/tap/checkin?loc=${encodeURIComponent(location)}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Visitor-Token": verifyData.token,
+          },
+        });
+
+        const checkinData = await checkinResponse.json();
+
+        if (checkinData.action === "checkout") {
+          // User is checking out - redirect to main tap page to show checkout UI
+          router.push(`/tap?loc=${encodeURIComponent(location)}`);
+          return;
+        }
+
+        setStep("success");
+      } else {
+        setErrorMessage("Authentication failed. Please try again or register below.");
+        setStep("form");
+      }
+    } catch (error) {
+      console.error("Passkey auth failed:", error);
+      // User cancelled or passkey not available
+      setErrorMessage("");
+      setStep("form");
+    }
+  }, [location, router]);
 
   return (
     <div className="min-h-screen bg-[#fff9e9] flex items-center justify-center p-4">
@@ -246,6 +312,16 @@ function RegisterPageContent() {
             <p className="text-center text-sm text-[#000824]/40 mt-4">
               Your next visit will be instant
             </p>
+
+            <div className="mt-6 pt-4 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={handlePasskeyLogin}
+                className="w-full text-center text-sm text-[#2153ff] hover:text-[#1a42cc] transition-colors"
+              >
+                Already registered? Sign in with Face ID
+              </button>
+            </div>
           </div>
         )}
 
@@ -265,6 +341,22 @@ function RegisterPageContent() {
           </div>
         )}
 
+        {step === "authenticating" && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
+            <div className="w-20 h-20 bg-[#2153ff] rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-[#000824] mb-2">
+              Verify with Face ID
+            </h2>
+            <p className="text-[#000824]/60">
+              to restore your check-in
+            </p>
+          </div>
+        )}
+
         {step === "success" && (
           <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
             <motion.div
@@ -273,14 +365,14 @@ function RegisterPageContent() {
               transition={{ type: "spring" }}
               className="w-24 h-24 bg-gradient-to-br from-[#ffc421] to-[#ff9d00] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
             >
-              <span className="text-5xl">{avatarEmoji}</span>
+              <span className="text-5xl">{authenticatedName ? authenticatedEmoji : avatarEmoji}</span>
             </motion.div>
             <h1 className="text-2xl font-bold text-[#000824] mb-2">
-              Welcome, {name}!
+              {authenticatedName ? `Welcome back, ${authenticatedName}!` : `Welcome, ${name}!`}
             </h1>
             <p className="text-[#000824]/60 mb-2">You&apos;re checked in</p>
             <p className="text-[#000824]/40 text-sm">
-              Next time, just tap to check in instantly
+              {authenticatedName ? "Good to see you again" : "Next time, just tap to check in instantly"}
             </p>
           </div>
         )}
