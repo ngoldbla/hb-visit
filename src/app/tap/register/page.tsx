@@ -3,6 +3,7 @@
 import { useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
 import { validateName } from "@/lib/validation/name-moderation";
 
@@ -215,7 +216,25 @@ function RegisterPageContent() {
   }, [location, router]);
 
   return (
-    <div className="min-h-screen bg-[#fff9e9] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#fff9e9] flex flex-col p-4">
+      {/* Branded Header */}
+      <motion.header
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="pt-6 pb-4 flex flex-col items-center"
+      >
+        <Image
+          src="/hatchbridge-logo.svg"
+          alt="HatchBridge"
+          width={140}
+          height={34}
+          priority
+        />
+        <p className="text-[#000824]/50 text-sm mt-1">Incubator Check-In</p>
+      </motion.header>
+
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -397,16 +416,32 @@ function RegisterPageContent() {
           </div>
         )}
       </motion.div>
+      </div>
     </div>
   );
 }
 
 function LoadingFallback() {
   return (
-    <div className="min-h-screen bg-[#fff9e9] flex items-center justify-center p-4">
-      <div className="text-center">
-        <div className="w-16 h-16 border-4 border-[#2153ff] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-[#000824] text-lg">Loading...</p>
+    <div className="min-h-screen bg-[#fff9e9] flex flex-col p-4">
+      {/* Branded Header */}
+      <header className="pt-6 pb-4 flex flex-col items-center">
+        <Image
+          src="/hatchbridge-logo.svg"
+          alt="HatchBridge"
+          width={140}
+          height={34}
+          priority
+        />
+        <p className="text-[#000824]/50 text-sm mt-1">Incubator Check-In</p>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#2153ff] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-[#000824] text-lg">Loading...</p>
+        </div>
       </div>
     </div>
   );
