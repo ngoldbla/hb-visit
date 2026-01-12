@@ -49,43 +49,28 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Check if setting exists
-    const { data: existing } = await supabase
+    // Use upsert to insert or update in a single operation
+    // This is more reliable than check-then-insert/update which can fail
+    // due to race conditions or RLS policy interactions
+    const { error } = await supabase
       .from("kiosk_settings")
-      .select("id")
-      .eq("setting_key", key)
-      .single();
-
-    if (existing) {
-      // Update existing setting
-      const { error } = await supabase
-        .from("kiosk_settings")
-        .update({
+      .upsert(
+        {
+          setting_key: key,
           setting_value: value,
           updated_at: new Date().toISOString(),
-        })
-        .eq("setting_key", key);
+        },
+        {
+          onConflict: "setting_key",
+        }
+      );
 
-      if (error) {
-        return NextResponse.json(
-          { success: false, error: error.message },
-          { status: 500 }
-        );
-      }
-    } else {
-      // Insert new setting
-      const { error } = await supabase.from("kiosk_settings").insert({
-        setting_key: key,
-        setting_value: value,
-        updated_at: new Date().toISOString(),
-      });
-
-      if (error) {
-        return NextResponse.json(
-          { success: false, error: error.message },
-          { status: 500 }
-        );
-      }
+    if (error) {
+      console.error("Error upserting setting:", error);
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ success: true });
