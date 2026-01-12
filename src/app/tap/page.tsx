@@ -12,7 +12,7 @@ import {
   triggerHapticSuccess,
 } from "@/lib/audio";
 
-type TapStatus = "checking" | "choice" | "authenticating" | "success" | "checkout" | "registering" | "error";
+type TapStatus = "checking" | "choice" | "authenticating" | "success" | "checkout" | "registering" | "error" | "stale";
 
 interface CheckoutData {
   visitorName: string;
@@ -87,6 +87,10 @@ function TapPageContent() {
           setStatus("success");
         }
 
+        // Remove the loc parameter from URL to prevent stale tab re-check-ins
+        // When this tab is reopened later, the missing loc param signals it's a stale request
+        window.history.replaceState({}, '', '/tap');
+
         return true;
       }
 
@@ -138,6 +142,9 @@ function TapPageContent() {
 
         setStatus("success");
 
+        // Remove the loc parameter from URL to prevent stale tab re-check-ins
+        window.history.replaceState({}, '', '/tap');
+
         // Haptic and audio feedback (fire and forget)
         try {
           triggerHapticSuccess();
@@ -160,6 +167,20 @@ function TapPageContent() {
 
   useEffect(() => {
     async function handleTap() {
+      // Check if this is a stale tab (no loc parameter means the URL was already processed)
+      // This prevents accidental re-check-ins when reopening an old Safari tab
+      if (location === "unknown") {
+        const token = localStorage.getItem(STORAGE_KEY);
+        if (token) {
+          // User has a token but this is a stale URL - don't auto-check-in
+          setStatus("stale");
+          return;
+        }
+        // No token, show choice UI
+        setStatus("choice");
+        return;
+      }
+
       // 1. Check for localStorage token
       const token = localStorage.getItem(STORAGE_KEY);
 
@@ -178,7 +199,7 @@ function TapPageContent() {
     }
 
     handleTap();
-  }, [checkInWithToken, tryPasskeyAuth]);
+  }, [checkInWithToken, tryPasskeyAuth, location]);
 
   // Auto-redirect to registration after a moment
   useEffect(() => {
@@ -394,6 +415,34 @@ function TapPageContent() {
               className="bg-[#2153ff] text-white px-6 py-3 rounded-lg font-medium"
             >
               Register to Check In
+            </button>
+          </motion.div>
+        )}
+
+        {status === "stale" && (
+          <motion.div
+            key="stale"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="text-center max-w-sm"
+          >
+            <div className="w-20 h-20 bg-[#ffc421] rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-[#000824] mb-2">
+              Already Checked In
+            </h1>
+            <p className="text-[#000824]/60 mb-6">
+              This tab was from a previous check-in. Tap the NFC tag again to check in fresh.
+            </p>
+            <button
+              onClick={() => router.push("/stats")}
+              className="bg-[#000824] text-white px-6 py-3 rounded-xl font-medium hover:bg-[#000824]/90 transition-colors"
+            >
+              View Your Stats
             </button>
           </motion.div>
         )}
