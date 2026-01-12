@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   ExternalLink,
+  MapPin,
 } from "lucide-react";
 import {
   Sidebar,
@@ -27,6 +28,7 @@ const navItems = [
   { href: "/admin", label: "Dashboard", icon: Home },
   { href: "/admin/checkins", label: "Check-Ins", icon: ClipboardList },
   { href: "/admin/members", label: "Members", icon: Users },
+  { href: "/admin/locations", label: "Locations", icon: MapPin },
   { href: "/admin/community", label: "Community", icon: Target },
   { href: "/admin/quotes", label: "Quotes", icon: Quote },
   { href: "/admin/settings", label: "Settings", icon: Settings },
