@@ -347,7 +347,7 @@ function RegisterPageContent() {
                 onClick={handlePasskeyLogin}
                 className="w-full text-center text-sm text-[#2153ff] hover:text-[#1a42cc] transition-colors"
               >
-                Already registered? Sign in with Face ID
+                Already registered? Sign in with passkey
               </button>
             </div>
           </div>
@@ -364,7 +364,7 @@ function RegisterPageContent() {
               Setting up instant check-in
             </h2>
             <p className="text-[#000824]/60">
-              Confirm with Face ID to enable one-tap check-in for future visits
+              Confirm with passkey to enable one-tap check-in for future visits
             </p>
           </div>
         )}
@@ -377,7 +377,7 @@ function RegisterPageContent() {
               </svg>
             </div>
             <h2 className="text-xl font-bold text-[#000824] mb-2">
-              Verify with Face ID
+              Verify with passkey
             </h2>
             <p className="text-[#000824]/60">
               to restore your check-in
