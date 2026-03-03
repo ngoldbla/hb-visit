@@ -328,7 +328,7 @@ function TapPageContent() {
               transition={{ type: "spring", delay: 0.1 }}
               className="w-24 h-24 bg-gradient-to-br from-[#ffc421] to-[#ff9d00] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
             >
-              <span className="text-5xl">{avatarEmoji}</span>
+              <span className="text-5xl leading-none">{avatarEmoji}</span>
             </motion.div>
             <h1 className="text-2xl font-bold text-[#000824] mb-2">
               Welcome back, {formatDisplayName(visitorName)}!
@@ -368,7 +368,7 @@ function TapPageContent() {
               transition={{ type: "spring", delay: 0.1 }}
               className="w-24 h-24 bg-gradient-to-br from-[#2153ff] to-[#000824] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
             >
-              <span className="text-5xl">✌️</span>
+              <span className="text-5xl leading-none">✌️</span>
             </motion.div>
             <h1 className="text-2xl font-bold text-[#000824] mb-2">
               {checkoutData.peaceOutMessage}

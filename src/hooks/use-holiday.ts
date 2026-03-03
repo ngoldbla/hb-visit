@@ -46,6 +46,9 @@ export interface HolidaySettings {
 
   // For preview: which day of the holiday to show
   previewDay: number;
+
+  // Global toggle for holiday themes (default true)
+  enableHolidayThemes?: boolean;
 }
 
 const DEFAULT_SETTINGS: HolidaySettings = {
@@ -119,6 +122,20 @@ export function useHoliday(
 
   // Detect the current holiday
   const detectHoliday = useCallback(() => {
+    // If holiday themes are globally disabled, skip detection (but allow preview)
+    if (config.enableHolidayThemes === false && !config.previewHoliday) {
+      setState({
+        holiday: null,
+        dayOfHoliday: 0,
+        totalDays: 0,
+        theme: getDefaultTheme(),
+        isHoliday: false,
+        zodiacAnimal: null,
+        isLoading: false,
+      });
+      return;
+    }
+
     // If preview mode is active, use the preview holiday
     if (config.previewHoliday) {
       const holiday = getHolidayById(config.previewHoliday);
@@ -176,6 +193,7 @@ export function useHoliday(
       });
     }
   }, [
+    config.enableHolidayThemes,
     config.previewHoliday,
     config.previewDay,
     config.disabledHolidays,
@@ -225,6 +243,7 @@ export function useHoliday(
     detectHoliday();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    config.enableHolidayThemes,
     config.timezone,
     disabledHolidaysKey,
     config.previewHoliday,
