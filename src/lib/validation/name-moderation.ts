@@ -230,12 +230,12 @@ function containsDangerousChars(name: string): boolean {
 
 /**
  * Check if name contains only valid characters for a person's name.
- * Allows: Unicode letters, combining marks, spaces, hyphens, apostrophes, periods
+ * Allows: Unicode letters, combining marks, digits, spaces, hyphens, apostrophes, periods
  */
 function hasValidNameChars(name: string): boolean {
   // Allow Unicode letters (any language), combining marks, spaces, hyphens, apostrophes, periods
   // eslint-disable-next-line no-misleading-character-class
-  return /^[\p{L}\p{M}\s\-'.]+$/u.test(name);
+  return /^[\p{L}\p{M}\p{N}\s\-'.]+$/u.test(name);
 }
 
 /**
@@ -306,7 +306,7 @@ export function validateName(
       isValid: false,
       reason: "invalid_chars",
       userMessage:
-        "Name can only contain letters, spaces, hyphens, apostrophes, and periods",
+        "Name can only contain letters, numbers, spaces, hyphens, apostrophes, and periods",
     };
   }
 
