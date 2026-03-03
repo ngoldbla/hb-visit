@@ -38,6 +38,7 @@ export function HolidayProvider({ children }: HolidayProviderProps) {
           disabledHolidays: config.disabledHolidays || [],
           previewHoliday: config.previewHoliday || null,
           previewDay: config.previewDay || 1,
+          enableHolidayThemes: config.enableHolidayThemes ?? true,
         });
       } else {
         // Use defaults if no settings saved

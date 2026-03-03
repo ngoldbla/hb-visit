@@ -384,7 +384,7 @@ function RegisterPageContent() {
               transition={{ type: "spring" }}
               className="w-24 h-24 bg-gradient-to-br from-[#ffc421] to-[#ff9d00] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
             >
-              <span className="text-5xl">{authenticatedName ? authenticatedEmoji : avatarEmoji}</span>
+              <span className="text-5xl leading-none">{authenticatedName ? authenticatedEmoji : avatarEmoji}</span>
             </motion.div>
             <h1 className="text-2xl font-bold text-[#000824] mb-2">
               {authenticatedName ? `Welcome back, ${authenticatedName}!` : `Welcome, ${name}!`}
