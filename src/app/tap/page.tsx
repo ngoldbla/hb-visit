@@ -30,17 +30,23 @@ function TapPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const location = searchParams.get("loc") || "unknown";
+  const activityParam = searchParams.get("activity") || null;
 
   const [status, setStatus] = useState<TapStatus>("checking");
   const [visitorName, setVisitorName] = useState<string>("");
   const [avatarEmoji, setAvatarEmoji] = useState<string>("😊");
   const [arrivalPosition, setArrivalPosition] = useState<number>(0);
+  const [activityName, setActivityName] = useState<string | null>(null);
   const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   const checkInWithToken = useCallback(async (token: string) => {
     try {
-      const response = await fetch(`/api/tap/checkin?loc=${encodeURIComponent(location)}`, {
+      let checkinUrl = `/api/tap/checkin?loc=${encodeURIComponent(location)}`;
+      if (activityParam) {
+        checkinUrl += `&activity=${encodeURIComponent(activityParam)}`;
+      }
+      const response = await fetch(checkinUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -85,6 +91,9 @@ function TapPageContent() {
         } else {
           // Handle check-in
           setArrivalPosition(data.arrival_position || 0);
+          if (data.activity_name) {
+            setActivityName(data.activity_name);
+          }
           setStatus("success");
         }
 
@@ -99,7 +108,7 @@ function TapPageContent() {
     } catch {
       return false;
     }
-  }, [location]);
+  }, [location, activityParam]);
 
   const tryPasskeyAuth = useCallback(async () => {
     try {
@@ -133,13 +142,21 @@ function TapPageContent() {
         setVisitorName(verifyData.visitorName);
 
         // Create check-in record
-        await fetch(`/api/tap/checkin?loc=${encodeURIComponent(location)}`, {
+        let passkeyCheckinUrl = `/api/tap/checkin?loc=${encodeURIComponent(location)}`;
+        if (activityParam) {
+          passkeyCheckinUrl += `&activity=${encodeURIComponent(activityParam)}`;
+        }
+        const checkinResp = await fetch(passkeyCheckinUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "X-Visitor-Token": verifyData.token,
           },
         });
+        const checkinData = await checkinResp.json();
+        if (checkinData.activity_name) {
+          setActivityName(checkinData.activity_name);
+        }
 
         setStatus("success");
 
@@ -164,7 +181,7 @@ function TapPageContent() {
       console.error("Passkey auth failed:", error);
       return false;
     }
-  }, [location]);
+  }, [location, activityParam]);
 
   useEffect(() => {
     async function handleTap() {
@@ -196,21 +213,29 @@ function TapPageContent() {
 
       // 2. No token - redirect directly to registration
       // Skip the choice screen and let users register immediately
-      router.push(`/tap/register?loc=${encodeURIComponent(location)}`);
+      let registerUrl = `/tap/register?loc=${encodeURIComponent(location)}`;
+      if (activityParam) {
+        registerUrl += `&activity=${encodeURIComponent(activityParam)}`;
+      }
+      router.push(registerUrl);
     }
 
     handleTap();
-  }, [checkInWithToken, router, location]);
+  }, [checkInWithToken, router, location, activityParam]);
 
   // Auto-redirect to registration after a moment
   useEffect(() => {
     if (status === "registering") {
       const timer = setTimeout(() => {
-        router.push(`/tap/register?loc=${encodeURIComponent(location)}`);
+        let regUrl = `/tap/register?loc=${encodeURIComponent(location)}`;
+        if (activityParam) {
+          regUrl += `&activity=${encodeURIComponent(activityParam)}`;
+        }
+        router.push(regUrl);
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [status, router, location]);
+  }, [status, router, location, activityParam]);
 
   return (
     <div className="min-h-screen bg-[#fff9e9] flex flex-col p-4">
@@ -286,7 +311,11 @@ function TapPageContent() {
                   } catch {
                     // Continue even if audio fails
                   }
-                  router.push(`/tap/register?loc=${encodeURIComponent(location)}`);
+                  let choiceRegUrl = `/tap/register?loc=${encodeURIComponent(location)}`;
+                  if (activityParam) {
+                    choiceRegUrl += `&activity=${encodeURIComponent(activityParam)}`;
+                  }
+                  router.push(choiceRegUrl);
                 }}
                 className="w-full bg-white text-[#000824] px-6 py-4 rounded-xl font-medium text-lg border-2 border-[#000824]/10 hover:border-[#2153ff] transition-colors"
               >
@@ -333,7 +362,11 @@ function TapPageContent() {
             <h1 className="text-2xl font-bold text-[#000824] mb-2">
               Welcome back, {formatDisplayName(visitorName)}!
             </h1>
-            <p className="text-[#000824]/60">You&apos;re checked in</p>
+            <p className="text-[#000824]/60">
+              {activityName
+                ? `Checked in for ${activityName}`
+                : "You're checked in"}
+            </p>
             {arrivalPosition > 0 && (
               <p className="text-[#ffc421] font-semibold mt-2">
                 #{arrivalPosition} to arrive today
@@ -430,7 +463,13 @@ function TapPageContent() {
             </h1>
             <p className="text-[#000824]/60 mb-6">{errorMessage}</p>
             <button
-              onClick={() => router.push(`/tap/register?loc=${encodeURIComponent(location)}`)}
+              onClick={() => {
+                let errRegUrl = `/tap/register?loc=${encodeURIComponent(location)}`;
+                if (activityParam) {
+                  errRegUrl += `&activity=${encodeURIComponent(activityParam)}`;
+                }
+                router.push(errRegUrl);
+              }}
               className="bg-[#2153ff] text-white px-6 py-3 rounded-lg font-medium"
             >
               Register to Check In
