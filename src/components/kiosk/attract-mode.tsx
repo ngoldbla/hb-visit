@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Nfc, Flame, Users, TrendingUp } from "lucide-react";
+import { Flame, Users, TrendingUp } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import Image from "next/image";
 import { useWakeLock } from "@/hooks/use-wake-lock";
@@ -204,48 +204,6 @@ export function AttractMode({ stats }: AttractModeProps) {
           transition={{ delay: 0.3 }}
           className="flex flex-col items-center justify-center gap-8"
         >
-          {/* NFC Tap Zone */}
-          <div className="text-center">
-            <motion.div
-              animate={{
-                scale: [1, 1.03, 1],
-                boxShadow: [
-                  `0 8px 32px ${colors.primary}4D`,
-                  `0 12px 48px ${colors.primary}80`,
-                  `0 8px 32px ${colors.primary}4D`,
-                ],
-              }}
-              transition={{
-                duration: 2.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="w-40 h-40 rounded-[2rem] flex items-center justify-center mx-auto border-4 border-white"
-              style={{
-                background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.secondary})`,
-              }}
-            >
-              {theme.decorations.iconEmoji ? (
-                <span className="text-6xl">{theme.decorations.iconEmoji}</span>
-              ) : (
-                <Nfc className="w-20 h-20" style={{ color: colors.text }} />
-              )}
-            </motion.div>
-            <h2 className="text-3xl font-bold mt-6" style={{ color: colors.text }}>
-              Tap a Checkpoint
-            </h2>
-            <p className="text-[#333]/50 text-lg mt-2">
-              Use your phone at any NFC point
-            </p>
-          </div>
-
-          {/* Divider */}
-          <div className="flex items-center gap-4 w-full max-w-xs">
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#333]/20 to-transparent" />
-            <span className="text-[#333]/30 font-medium text-sm uppercase tracking-wider">or</span>
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#333]/20 to-transparent" />
-          </div>
-
           {/* Registration QR Code */}
           <div className="text-center">
             <motion.div
@@ -257,21 +215,21 @@ export function AttractMode({ stats }: AttractModeProps) {
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
-              className="w-36 h-36 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-black/10 p-3 border-2"
+              className="w-56 h-56 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-black/10 p-3 border-2"
             >
               <QRCodeSVG
                 value={REGISTRATION_URL}
-                size={120}
+                size={200}
                 level="M"
                 bgColor="transparent"
                 fgColor={colors.text}
               />
             </motion.div>
-            <h3 className="text-xl font-semibold text-[#333]/80 mt-4">
-              First Time?
-            </h3>
-            <p className="text-[#333]/40 mt-1">
-              Scan to register
+            <h2 className="text-3xl font-bold mt-6" style={{ color: colors.text }}>
+              Check In Here
+            </h2>
+            <p className="text-[#333]/50 text-lg mt-2">
+              Scan this QR code or tap the nearby checkpoint
             </p>
           </div>
         </motion.div>
@@ -358,7 +316,7 @@ export function AttractMode({ stats }: AttractModeProps) {
         className="py-4 text-center relative z-10"
       >
         <p className="text-[#333]/30 text-sm">
-          NFC checkpoints are located throughout the building
+          Scan the code with your phone&apos;s camera, or tap your phone on a nearby NFC checkpoint
         </p>
       </motion.footer>
     </div>
