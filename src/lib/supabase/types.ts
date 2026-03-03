@@ -9,6 +9,90 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activities: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          description: string | null
+          location_id: string
+          series_id: string | null
+          event_date: string | null
+          start_time: string | null
+          end_time: string | null
+          is_active: boolean
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          description?: string | null
+          location_id: string
+          series_id?: string | null
+          event_date?: string | null
+          start_time?: string | null
+          end_time?: string | null
+          is_active?: boolean
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          description?: string | null
+          location_id?: string
+          series_id?: string | null
+          event_date?: string | null
+          start_time?: string | null
+          end_time?: string | null
+          is_active?: boolean
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "activity_series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_series: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          description: string | null
+          is_active: boolean
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          description?: string | null
+          is_active?: boolean
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          description?: string | null
+          is_active?: boolean
+          created_at?: string | null
+        }
+        Relationships: []
+      }
       achievements: {
         Row: {
           badge_name: string
@@ -43,6 +127,7 @@ export type Database = {
       }
       check_ins: {
         Row: {
+          activity_id: string | null
           arrival_position: number | null
           check_in_method: string
           check_in_time: string
@@ -62,6 +147,7 @@ export type Database = {
           welcome_message: string | null
         }
         Insert: {
+          activity_id?: string | null
           arrival_position?: number | null
           check_in_method: string
           check_in_time: string
@@ -81,6 +167,7 @@ export type Database = {
           welcome_message?: string | null
         }
         Update: {
+          activity_id?: string | null
           arrival_position?: number | null
           check_in_method?: string
           check_in_time?: string
@@ -105,6 +192,13 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "check_ins_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
             referencedColumns: ["id"]
           },
         ]

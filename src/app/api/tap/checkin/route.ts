@@ -76,9 +76,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get location from query params or body
+    // Get location and optional activity from query params
     const url = new URL(request.url);
     const location = url.searchParams.get("loc") || "unknown";
+    const activitySlug = url.searchParams.get("activity") || null;
 
     // Validate the token
     const validation = await validateDeviceToken(token);
@@ -122,17 +123,38 @@ export async function POST(request: NextRequest) {
       member = newMember;
     }
 
+    // Validate activity if provided
+    let activity: { id: string; name: string; slug: string; location_id: string } | null = null;
+    if (activitySlug) {
+      const { data: activityData } = await supabase
+        .from("activities")
+        .select("id, name, slug, location_id")
+        .eq("slug", activitySlug)
+        .eq("is_active", true)
+        .single();
+
+      if (!activityData) {
+        return NextResponse.json(
+          { success: false, error: "Activity not found or inactive" },
+          { status: 404 }
+        );
+      }
+      activity = activityData;
+    }
+
     // Check if user is already checked in today (for check-out functionality)
+    // Activity taps NEVER trigger checkout — only regular location taps toggle check-in/out
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
     let activeCheckIn = null;
-    if (member?.id) {
+    if (member?.id && !activity) {
       const { data } = await supabase
         .from("check_ins")
         .select("id, check_in_time")
         .eq("member_id", member.id)
         .eq("status", "checked_in")
+        .is("activity_id", null)
         .gte("check_in_time", todayStart.toISOString())
         .order("check_in_time", { ascending: false })
         .limit(1)
@@ -140,7 +162,7 @@ export async function POST(request: NextRequest) {
       activeCheckIn = data;
     }
 
-    // If already checked in, perform check-out
+    // If already checked in and this is NOT an activity tap, perform check-out
     if (activeCheckIn) {
       const checkInTime = new Date(activeCheckIn.check_in_time);
       const checkOutTime = new Date();
@@ -175,23 +197,39 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Check for recent check-in within 2 hours (overtap detection)
-    // This handles cases where someone taps multiple times without checking out
-    const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
-    const twoHoursAgo = new Date(Date.now() - TWO_HOURS_MS).toISOString();
-
+    // Check for existing check-in today (overtap detection)
+    // For activity taps: scoped to that specific activity (same activity within 2 hours)
+    // For regular taps: any non-overtap check-in today
     let isOvertap = false;
     if (member?.id) {
-      const { data: recentCheckIn } = await supabase
-        .from("check_ins")
-        .select("id")
-        .eq("member_id", member.id)
-        .gte("check_in_time", twoHoursAgo)
-        .eq("is_overtap", false)
-        .limit(1)
-        .single();
+      if (activity) {
+        // Activity overtap: same activity within 2 hours
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+        const { data: recentActivityCheckIn } = await supabase
+          .from("check_ins")
+          .select("id")
+          .eq("member_id", member.id)
+          .eq("activity_id", activity.id)
+          .gte("check_in_time", twoHoursAgo.toISOString())
+          .eq("is_overtap", false)
+          .limit(1)
+          .single();
 
-      isOvertap = !!recentCheckIn;
+        isOvertap = !!recentActivityCheckIn;
+      } else {
+        // Regular overtap: any non-activity check-in today
+        const { data: recentCheckIn } = await supabase
+          .from("check_ins")
+          .select("id")
+          .eq("member_id", member.id)
+          .is("activity_id", null)
+          .gte("check_in_time", todayStart.toISOString())
+          .eq("is_overtap", false)
+          .limit(1)
+          .single();
+
+        isOvertap = !!recentCheckIn;
+      }
     }
 
     // Calculate new streak
@@ -254,7 +292,7 @@ export async function POST(request: NextRequest) {
       newBadges = await evaluateAndAwardBadges(supabase, member.id, badgeContext);
     }
 
-    // Create check-in record (always created, but marked as overtap if within 2 hours)
+    // Create check-in record (always created, but marked as overtap if already checked in today)
     const { data: checkIn, error: checkInError } = await supabase
       .from("check_ins")
       .insert({
@@ -266,6 +304,7 @@ export async function POST(request: NextRequest) {
         status: "checked_in",
         arrival_position: isOvertap ? null : arrivalPosition,
         is_overtap: isOvertap,
+        activity_id: activity?.id || null,
       })
       .select("id")
       .single();
@@ -309,7 +348,10 @@ export async function POST(request: NextRequest) {
       monthly_count: monthlyCount || 0,
       is_overtap: isOvertap,
       new_badges: newBadges,
-      message: `Welcome back, ${visitorName}!`,
+      activity_name: activity?.name || null,
+      message: activity
+        ? `Checked in for ${activity.name}`
+        : `Welcome back, ${visitorName}!`,
     });
   } catch (error) {
     console.error("Check-in error:", error);

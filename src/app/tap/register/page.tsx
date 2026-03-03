@@ -48,6 +48,7 @@ function RegisterPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const location = searchParams.get("loc") || "unknown";
+  const activityParam = searchParams.get("activity") || null;
 
   const [step, setStep] = useState<RegistrationStep>("form");
   const [name, setName] = useState("");
@@ -134,7 +135,11 @@ function RegisterPageContent() {
       }
 
       // Step 3: Create check-in
-      await fetch(`/api/tap/checkin?loc=${encodeURIComponent(location)}`, {
+      let regCheckinUrl = `/api/tap/checkin?loc=${encodeURIComponent(location)}`;
+      if (activityParam) {
+        regCheckinUrl += `&activity=${encodeURIComponent(activityParam)}`;
+      }
+      await fetch(regCheckinUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -150,7 +155,7 @@ function RegisterPageContent() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [name, email, phone, company, avatarEmoji, location]);
+  }, [name, email, phone, company, avatarEmoji, location, activityParam]);
 
   const handlePasskeyLogin = useCallback(async () => {
     try {
@@ -186,7 +191,11 @@ function RegisterPageContent() {
         setAuthenticatedEmoji(verifyData.avatarEmoji || "😊");
 
         // Create check-in record
-        const checkinResponse = await fetch(`/api/tap/checkin?loc=${encodeURIComponent(location)}`, {
+        let passkeyCheckinUrl = `/api/tap/checkin?loc=${encodeURIComponent(location)}`;
+        if (activityParam) {
+          passkeyCheckinUrl += `&activity=${encodeURIComponent(activityParam)}`;
+        }
+        const checkinResponse = await fetch(passkeyCheckinUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -213,7 +222,7 @@ function RegisterPageContent() {
       setErrorMessage("");
       setStep("form");
     }
-  }, [location, router]);
+  }, [location, activityParam, router]);
 
   return (
     <div className="min-h-screen bg-[#fff9e9] flex flex-col p-4">
