@@ -45,10 +45,7 @@ export async function GET(request: NextRequest) {
       "Visitor Name",
       "Location",
       "Check-In Time",
-      "Check-Out Time",
-      "Duration (minutes)",
       "Check-In Method",
-      "Status",
       "Is Overtap",
     ];
 
@@ -56,10 +53,7 @@ export async function GET(request: NextRequest) {
       escapeCSV(c.visitor_name),
       escapeCSV(c.location),
       formatDateTime(c.check_in_time),
-      formatDateTime(c.check_out_time),
-      String(c.duration_minutes ?? ""),
       escapeCSV(c.check_in_method),
-      escapeCSV(c.status),
       c.is_overtap ? "Yes" : "No",
     ]);
 

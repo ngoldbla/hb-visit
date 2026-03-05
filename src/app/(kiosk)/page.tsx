@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AttractCycleManager } from "@/components/kiosk/attract-cycle-manager";
 import { SuccessScreen } from "@/components/kiosk/success-screen";
+import { MemberDirectory } from "@/components/kiosk/member-directory";
 import { MobileExplainer } from "@/components/kiosk/mobile-explainer";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { createClient } from "@/lib/supabase/client";
 
-type KioskState = "attract" | "celebrating";
+type KioskState = "attract" | "celebrating" | "directory";
 
 interface CelebrationStats {
   monthlyCount: number;
@@ -32,6 +33,7 @@ export default function KioskPage() {
     monthlyCount: 0,
     monthlyGoal: 1000,
   });
+  const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch celebration stats (for success screen)
   const fetchCelebrationStats = useCallback(async () => {
@@ -65,12 +67,28 @@ export default function KioskPage() {
     fetchCelebrationStats();
   }, [fetchCelebrationStats]);
 
-  // Subscribe to real-time check-ins from NFC taps
+  // Show celebration and auto-return to attract
+  const showCelebration = useCallback((result: CheckInResult) => {
+    // Clear any existing timer
+    if (celebrationTimerRef.current) {
+      clearTimeout(celebrationTimerRef.current);
+    }
+
+    setCheckInResult(result);
+    setState("celebrating");
+
+    celebrationTimerRef.current = setTimeout(() => {
+      setState("attract");
+      setCheckInResult(null);
+    }, 6000);
+  }, []);
+
+  // Subscribe to real-time check-ins from NFC taps and kiosk directory
   useEffect(() => {
     const supabase = createClient();
 
     const channel = supabase
-      .channel("nfc-checkins")
+      .channel("kiosk-checkins")
       .on(
         "postgres_changes",
         {
@@ -79,9 +97,11 @@ export default function KioskPage() {
           table: "check_ins",
         },
         async (payload) => {
-          // Show celebration for NFC token check-ins
+          // Show celebration for NFC token check-ins (directory check-ins handled by onCheckIn callback)
           if (payload.new && payload.new.check_in_method === "nfc_token") {
-            // Fetch the member's streak for this check-in
+            // Guard: if already celebrating, ignore incoming events
+            if (state === "celebrating") return;
+
             let streak = 1;
             if (payload.new.member_id) {
               const { data: member } = await supabase
@@ -92,10 +112,9 @@ export default function KioskPage() {
               streak = member?.current_streak || 1;
             }
 
-            // Refresh celebration stats immediately
             await fetchCelebrationStats();
 
-            setCheckInResult({
+            showCelebration({
               visitorName: payload.new.visitor_name || "Visitor",
               checkInTime: new Date(payload.new.check_in_time),
               location: payload.new.location,
@@ -103,13 +122,6 @@ export default function KioskPage() {
               monthlyCount: celebrationStats.monthlyCount + 1,
               monthlyGoal: celebrationStats.monthlyGoal,
             });
-            setState("celebrating");
-
-            // Return to attract mode after 6 seconds
-            setTimeout(() => {
-              setState("attract");
-              setCheckInResult(null);
-            }, 6000);
           }
         }
       )
@@ -118,7 +130,49 @@ export default function KioskPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchCelebrationStats, celebrationStats.monthlyCount, celebrationStats.monthlyGoal]);
+  }, [fetchCelebrationStats, celebrationStats.monthlyCount, celebrationStats.monthlyGoal, showCelebration, state]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (celebrationTimerRef.current) {
+        clearTimeout(celebrationTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Directory handlers
+  const handleScreenTap = useCallback(() => {
+    if (state === "attract") {
+      setState("directory");
+    }
+  }, [state]);
+
+  const handleDirectoryClose = useCallback(() => {
+    setState("attract");
+  }, []);
+
+  const handleDirectoryCheckIn = useCallback(async (memberId: string, memberName: string) => {
+    await fetchCelebrationStats();
+
+    const supabase = createClient();
+    let streak = 1;
+    const { data: member } = await supabase
+      .from("members")
+      .select("current_streak")
+      .eq("id", memberId)
+      .single();
+    streak = member?.current_streak || 1;
+
+    showCelebration({
+      visitorName: memberName,
+      checkInTime: new Date(),
+      location: "kiosk",
+      streak,
+      monthlyCount: celebrationStats.monthlyCount + 1,
+      monthlyGoal: celebrationStats.monthlyGoal,
+    });
+  }, [fetchCelebrationStats, celebrationStats.monthlyCount, celebrationStats.monthlyGoal, showCelebration]);
 
   // Show mobile explainer on small screens
   if (isMobile) {
@@ -137,7 +191,23 @@ export default function KioskPage() {
             transition={{ duration: 0.4 }}
             className="w-full h-full"
           >
-            <AttractCycleManager />
+            <AttractCycleManager onScreenTap={handleScreenTap} />
+          </motion.div>
+        )}
+
+        {state === "directory" && (
+          <motion.div
+            key="directory"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+            className="w-full h-full"
+          >
+            <MemberDirectory
+              onCheckIn={handleDirectoryCheckIn}
+              onClose={handleDirectoryClose}
+            />
           </motion.div>
         )}
 

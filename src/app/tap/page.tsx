@@ -9,20 +9,10 @@ import { formatDisplayName } from "@/lib/utils";
 import {
   unlockAudio,
   playMobileChime,
-  playMobileFarewell,
   triggerHapticSuccess,
 } from "@/lib/audio";
 
-type TapStatus = "checking" | "choice" | "authenticating" | "success" | "checkout" | "registering" | "error" | "stale";
-
-interface CheckoutData {
-  visitorName: string;
-  avatarEmoji: string;
-  peaceOutMessage: string;
-  durationMinutes: number;
-  durationTitle: string;
-  durationMessage: string;
-}
+type TapStatus = "checking" | "choice" | "authenticating" | "success" | "registering" | "error";
 
 const STORAGE_KEY = "hb_visitor_token";
 
@@ -37,7 +27,6 @@ function TapPageContent() {
   const [avatarEmoji, setAvatarEmoji] = useState<string>("😊");
   const [arrivalPosition, setArrivalPosition] = useState<number>(0);
   const [activityName, setActivityName] = useState<string | null>(null);
-  const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   const checkInWithToken = useCallback(async (token: string) => {
@@ -63,13 +52,8 @@ function TapPageContent() {
         // Haptic and audio feedback (fire and forget - don't block on audio)
         try {
           triggerHapticSuccess();
-          // Don't await unlockAudio - it can hang on iOS without user gesture
           unlockAudio().then(() => {
-            if (data.action === "checkout") {
-              playMobileFarewell();
-            } else {
-              playMobileChime();
-            }
+            playMobileChime();
           }).catch(() => {
             // Audio not available, ignore
           });
@@ -77,29 +61,11 @@ function TapPageContent() {
           // Haptic not available, continue
         }
 
-        if (data.action === "checkout") {
-          // Handle check-out
-          setCheckoutData({
-            visitorName: data.visitor_name,
-            avatarEmoji: data.avatar_emoji || "😊",
-            peaceOutMessage: data.message,
-            durationMinutes: data.duration_minutes,
-            durationTitle: data.duration_title,
-            durationMessage: data.duration_message,
-          });
-          setStatus("checkout");
-        } else {
-          // Handle check-in
-          setArrivalPosition(data.arrival_position || 0);
-          if (data.activity_name) {
-            setActivityName(data.activity_name);
-          }
-          setStatus("success");
+        setArrivalPosition(data.arrival_position || 0);
+        if (data.activity_name) {
+          setActivityName(data.activity_name);
         }
-
-        // Remove the loc parameter from URL to prevent stale tab re-check-ins
-        // When this tab is reopened later, the missing loc param signals it's a stale request
-        window.history.replaceState({}, '', '/tap');
+        setStatus("success");
 
         return true;
       }
@@ -160,9 +126,6 @@ function TapPageContent() {
 
         setStatus("success");
 
-        // Remove the loc parameter from URL to prevent stale tab re-check-ins
-        window.history.replaceState({}, '', '/tap');
-
         // Haptic and audio feedback (fire and forget)
         try {
           triggerHapticSuccess();
@@ -185,16 +148,15 @@ function TapPageContent() {
 
   useEffect(() => {
     async function handleTap() {
-      // Check if this is a stale tab (no loc parameter means the URL was already processed)
-      // This prevents accidental re-check-ins when reopening an old Safari tab
+      // Stale tab: no loc parameter means the URL was already processed or user navigated directly
+      // Just re-attempt check-in if they have a token
       if (location === "unknown") {
         const token = localStorage.getItem(STORAGE_KEY);
         if (token) {
-          // User has a token but this is a stale URL - don't auto-check-in
-          setStatus("stale");
-          return;
+          const success = await checkInWithToken(token);
+          if (success) return;
         }
-        // No token, redirect to registration
+        // No token or invalid token, redirect to registration
         router.push("/tap/register");
         return;
       }
@@ -212,7 +174,6 @@ function TapPageContent() {
       }
 
       // 2. No token - redirect directly to registration
-      // Skip the choice screen and let users register immediately
       let registerUrl = `/tap/register?loc=${encodeURIComponent(location)}`;
       if (activityParam) {
         registerUrl += `&activity=${encodeURIComponent(activityParam)}`;
@@ -387,51 +348,6 @@ function TapPageContent() {
           </motion.div>
         )}
 
-        {status === "checkout" && checkoutData && (
-          <motion.div
-            key="checkout"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="text-center"
-          >
-            <motion.div
-              initial={{ scale: 0, rotate: -10 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", delay: 0.1 }}
-              className="w-24 h-24 bg-gradient-to-br from-[#2153ff] to-[#000824] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
-            >
-              <span className="text-5xl leading-none">✌️</span>
-            </motion.div>
-            <h1 className="text-2xl font-bold text-[#000824] mb-2">
-              {checkoutData.peaceOutMessage}
-            </h1>
-            <div className="bg-[#000824]/5 rounded-xl p-4 mt-4">
-              <p className="text-[#000824]/60 text-sm">Session Duration</p>
-              <p className="text-2xl font-bold text-[#000824]">
-                {checkoutData.durationMinutes < 60
-                  ? `${checkoutData.durationMinutes} min`
-                  : `${Math.floor(checkoutData.durationMinutes / 60)}h ${checkoutData.durationMinutes % 60}m`}
-              </p>
-              <p className="text-[#ffc421] font-semibold mt-1">
-                {checkoutData.durationTitle}
-              </p>
-              <p className="text-[#000824]/50 text-sm">
-                {checkoutData.durationMessage}
-              </p>
-            </div>
-            <motion.button
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              onClick={() => router.push("/stats")}
-              className="mt-6 bg-[#000824] text-white px-6 py-3 rounded-xl font-medium hover:bg-[#000824]/90 transition-colors"
-            >
-              View Your Stats
-            </motion.button>
-          </motion.div>
-        )}
-
         {status === "registering" && (
           <motion.div
             key="registering"
@@ -473,34 +389,6 @@ function TapPageContent() {
               className="bg-[#2153ff] text-white px-6 py-3 rounded-lg font-medium"
             >
               Register to Check In
-            </button>
-          </motion.div>
-        )}
-
-        {status === "stale" && (
-          <motion.div
-            key="stale"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="text-center max-w-sm"
-          >
-            <div className="w-20 h-20 bg-[#ffc421] rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h1 className="text-2xl font-bold text-[#000824] mb-2">
-              Already Checked In
-            </h1>
-            <p className="text-[#000824]/60 mb-6">
-              This tab was from a previous check-in. Tap the NFC tag again to check in fresh.
-            </p>
-            <button
-              onClick={() => router.push("/stats")}
-              className="bg-[#000824] text-white px-6 py-3 rounded-xl font-medium hover:bg-[#000824]/90 transition-colors"
-            >
-              View Your Stats
             </button>
           </motion.div>
         )}

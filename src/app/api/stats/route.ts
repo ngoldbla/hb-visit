@@ -15,7 +15,6 @@ export interface StatsResponse {
       currentStreak: number;
       longestStreak: number;
       totalCheckIns: number;
-      totalHours: number;
       memberSince: string;
     };
     weeklyActivity: boolean[]; // M-Su, true if checked in
@@ -85,7 +84,7 @@ export async function GET(request: NextRequest) {
 
     const { data: monthlyCheckIns } = await supabase
       .from("check_ins")
-      .select("check_in_time, duration_minutes")
+      .select("check_in_time")
       .eq("member_id", member.id)
       .eq("is_overtap", false)
       .gte("check_in_time", startOfMonth.toISOString())
@@ -94,15 +93,11 @@ export async function GET(request: NextRequest) {
 
     // Build monthly heatmap
     const heatmapMap = new Map<string, number>();
-    let totalMinutes = 0;
 
     if (monthlyCheckIns) {
       for (const checkIn of monthlyCheckIns) {
         const date = checkIn.check_in_time.split("T")[0];
         heatmapMap.set(date, (heatmapMap.get(date) || 0) + 1);
-        if (checkIn.duration_minutes) {
-          totalMinutes += checkIn.duration_minutes;
-        }
       }
     }
 
@@ -148,9 +143,6 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Calculate total hours
-    const totalHours = Math.round(totalMinutes / 60);
-
     return NextResponse.json<StatsResponse>({
       success: true,
       stats: {
@@ -162,7 +154,6 @@ export async function GET(request: NextRequest) {
           currentStreak: member.current_streak || 0,
           longestStreak: member.longest_streak || 0,
           totalCheckIns: member.total_check_ins || 0,
-          totalHours,
           memberSince: member.created_at || new Date().toISOString(),
         },
         weeklyActivity,

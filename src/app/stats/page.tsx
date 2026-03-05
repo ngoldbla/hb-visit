@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Flame, Calendar, Clock, Trophy, ChevronLeft } from "lucide-react";
+import { Flame, Calendar, Trophy, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import type { StatsResponse } from "@/app/api/stats/route";
 
@@ -300,17 +300,12 @@ export default function StatsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="grid grid-cols-3 gap-3 mb-4"
+          className="grid grid-cols-2 gap-3 mb-4"
         >
           <div className="bg-white rounded-xl p-4 text-center shadow-sm">
             <Calendar className="w-6 h-6 text-[#2153ff] mx-auto mb-1" />
             <p className="text-2xl font-bold text-[#000824]">{stats.member.totalCheckIns}</p>
             <p className="text-xs text-[#333]/50">Check-ins</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 text-center shadow-sm">
-            <Clock className="w-6 h-6 text-[#2153ff] mx-auto mb-1" />
-            <p className="text-2xl font-bold text-[#000824]">{stats.member.totalHours}</p>
-            <p className="text-xs text-[#333]/50">Hours</p>
           </div>
           <div className="bg-white rounded-xl p-4 text-center shadow-sm">
             <Trophy className="w-6 h-6 text-[#ffc421] mx-auto mb-1" />

@@ -132,51 +132,51 @@ export function QuoteCycle({ quotes, displayDuration = 8000, onSkip }: QuoteCycl
         </AnimatePresence>
       </div>
 
-      {/* Progress dots */}
-      {quotes.length > 1 && (
-        <div className="pb-8 flex items-center justify-center gap-2 relative z-10">
-          {quotes.map((_, i) => (
-            <motion.div
-              key={i}
-              className="w-2 h-2 rounded-full transition-colors duration-300"
-              style={{
-                backgroundColor: i === currentIndex ? colors.primary : `${colors.text}1A`,
-              }}
-              animate={i === currentIndex ? { scale: [1, 1.2, 1] } : {}}
-              transition={{ duration: 0.3 }}
-            />
-          ))}
-        </div>
-      )}
+      {/* Progress dots and tap instruction */}
+      <div className="flex flex-col items-center gap-3 pb-6 relative z-10">
+        {quotes.length > 1 && (
+          <div className="flex items-center justify-center gap-2">
+            {quotes.map((_, i) => (
+              <motion.div
+                key={i}
+                className="w-2 h-2 rounded-full transition-colors duration-300"
+                style={{
+                  backgroundColor: i === currentIndex ? colors.primary : `${colors.text}1A`,
+                }}
+                animate={i === currentIndex ? { scale: [1, 1.2, 1] } : {}}
+                transition={{ duration: 0.3 }}
+              />
+            ))}
+          </div>
+        )}
 
-      {/* Tap to continue instruction */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-        className="absolute bottom-6 left-0 right-0 text-center"
-      >
         <motion.div
-          animate={{ opacity: [0.4, 0.7, 0.4] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="flex items-center justify-center gap-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
         >
-          <span className="text-[#333]/40 text-sm">Tap anywhere to continue</span>
-          <svg
-            className="w-4 h-4 text-[#333]/40"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+          <motion.div
+            animate={{ opacity: [0.4, 0.7, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="flex items-center justify-center gap-2"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
+            <span className="text-[#333]/40 text-sm">Tap anywhere to continue</span>
+            <svg
+              className="w-4 h-4 text-[#333]/40"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      </div>
     </div>
   );
 }
