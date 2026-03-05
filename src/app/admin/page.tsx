@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { UserCheck, Users, Clock, Target, Flame, TrendingUp, BarChart3, Timer, AlertTriangle } from "lucide-react";
+import { UserCheck, Users, Target, Flame, TrendingUp, BarChart3, Clock, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,6 @@ import { formatDisplayName } from "@/lib/utils";
 
 interface Stats {
   todayCheckIns: number;
-  currentlyIn: number;
   totalMembers: number;
   monthlyCount: number;
   monthlyGoal: number;
@@ -41,7 +40,6 @@ interface HourCount {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats>({
     todayCheckIns: 0,
-    currentlyIn: 0,
     totalMembers: 0,
     monthlyCount: 0,
     monthlyGoal: 1000,
@@ -50,7 +48,6 @@ export default function AdminDashboard() {
   });
   const [weeklyTrend, setWeeklyTrend] = useState<DailyCount[]>([]);
   const [peakHours, setPeakHours] = useState<HourCount[]>([]);
-  const [avgDuration, setAvgDuration] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   // Danger zone state
@@ -72,16 +69,11 @@ export default function AdminDashboard() {
       weekAgo.setDate(weekAgo.getDate() - 7);
       weekAgo.setHours(0, 0, 0, 0);
 
-      const [checkIns, currentIn, members, monthlyCheckIns, goal, topStreak, weeklyData, durationData] = await Promise.all([
+      const [checkIns, members, monthlyCheckIns, goal, topStreak, weeklyData] = await Promise.all([
         supabase
           .from("check_ins")
           .select("id", { count: "exact" })
           .gte("check_in_time", `${today}T00:00:00`)
-          .eq("is_overtap", false),
-        supabase
-          .from("check_ins")
-          .select("id", { count: "exact" })
-          .eq("status", "checked_in")
           .eq("is_overtap", false),
         supabase.from("members").select("id", { count: "exact" }).neq("is_active", false),
         supabase
@@ -108,16 +100,10 @@ export default function AdminDashboard() {
           .select("check_in_time")
           .gte("check_in_time", weekAgo.toISOString())
           .eq("is_overtap", false),
-        // Duration data
-        supabase
-          .from("check_ins")
-          .select("duration_minutes")
-          .not("duration_minutes", "is", null),
       ]);
 
       setStats({
         todayCheckIns: checkIns.count || 0,
-        currentlyIn: currentIn.count || 0,
         totalMembers: members.count || 0,
         monthlyCount: monthlyCheckIns.count || 0,
         monthlyGoal: goal.data?.target_count || 1000,
@@ -157,13 +143,6 @@ export default function AdminDashboard() {
         .sort((a, b) => b.count - a.count)
         .slice(0, 3);
       setPeakHours(sortedHours);
-
-      // Calculate average duration
-      const durations = (durationData.data || []).map((d) => d.duration_minutes).filter(Boolean) as number[];
-      if (durations.length > 0) {
-        const avg = durations.reduce((sum, d) => sum + d, 0) / durations.length;
-        setAvgDuration(Math.round(avg));
-      }
 
       setLoading(false);
     }
@@ -215,13 +194,6 @@ export default function AdminDashboard() {
     return hour < 12 ? `${hour} AM` : `${hour - 12} PM`;
   }
 
-  function formatDuration(minutes: number): string {
-    if (minutes < 60) return `${minutes}m`;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-  }
-
   const statCards = [
     {
       label: "Today's Check-Ins",
@@ -229,13 +201,6 @@ export default function AdminDashboard() {
       icon: UserCheck,
       color: "text-green-600",
       bg: "bg-green-100",
-    },
-    {
-      label: "Currently In Building",
-      value: stats.currentlyIn,
-      icon: Clock,
-      color: "text-orange-600",
-      bg: "bg-orange-100",
     },
     {
       label: "Total Members",
@@ -313,7 +278,7 @@ export default function AdminDashboard() {
       </Card>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {statCards.map((card) => (
           <Card key={card.label} className="p-6">
             <div className="flex items-center gap-4">
@@ -358,45 +323,29 @@ export default function AdminDashboard() {
             </div>
           </Card>
 
-          {/* Peak Hours & Avg Duration */}
-          <div className="grid grid-cols-1 gap-6">
-            <Card className="p-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Clock className="w-5 h-5 text-amber-600" />
-                <h3 className="font-semibold text-gray-900">Peak Hours</h3>
+          {/* Peak Hours */}
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="w-5 h-5 text-amber-600" />
+              <h3 className="font-semibold text-gray-900">Peak Hours</h3>
+            </div>
+            {peakHours.length === 0 ? (
+              <p className="text-sm text-gray-500">No data yet</p>
+            ) : (
+              <div className="space-y-2">
+                {peakHours.map((h, i) => (
+                  <div key={i} className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">
+                      {formatHour(h.hour)}
+                    </span>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {h.count} check-ins
+                    </span>
+                  </div>
+                ))}
               </div>
-              {peakHours.length === 0 ? (
-                <p className="text-sm text-gray-500">No data yet</p>
-              ) : (
-                <div className="space-y-2">
-                  {peakHours.map((h, i) => (
-                    <div key={i} className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">
-                        {formatHour(h.hour)}
-                      </span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {h.count} check-ins
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-cyan-100">
-                  <Timer className="w-6 h-6 text-cyan-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Avg Visit Duration</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {loading ? "..." : avgDuration > 0 ? formatDuration(avgDuration) : "N/A"}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </div>
+            )}
+          </Card>
         </div>
       </div>
 

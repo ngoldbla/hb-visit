@@ -25,9 +25,6 @@ interface CheckIn {
   id: string;
   check_in_time: string;
   check_in_method: string;
-  check_out_time: string | null;
-  duration_minutes: number | null;
-  status: string | null;
   visitor_name: string | null;
   location: string | null;
   is_overtap: boolean | null;
@@ -47,9 +44,6 @@ export default function CheckInsPage() {
         id,
         check_in_time,
         check_in_method,
-        check_out_time,
-        duration_minutes,
-        status,
         visitor_name,
         location,
         is_overtap
@@ -92,21 +86,13 @@ export default function CheckInsPage() {
     });
   }
 
-  function formatDuration(minutes: number | null) {
-    if (!minutes) return "-";
-    if (minutes < 60) return `${minutes}m`;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours}h ${mins}m`;
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Check-In Log</h1>
           <p className="text-gray-600 mt-1">
-            View visitor check-in and check-out activity
+            View visitor check-in activity
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -131,22 +117,19 @@ export default function CheckInsPage() {
               <TableHead>Visitor</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Check-In</TableHead>
-              <TableHead>Check-Out</TableHead>
-              <TableHead>Duration</TableHead>
               <TableHead>Method</TableHead>
-              <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={4} className="text-center py-8">
                   Loading check-ins...
                 </TableCell>
               </TableRow>
             ) : checkIns.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={4} className="text-center py-8">
                   No check-ins found.
                 </TableCell>
               </TableRow>
@@ -188,27 +171,8 @@ export default function CheckInsPage() {
                   </TableCell>
                   <TableCell>{formatDateTime(checkIn.check_in_time)}</TableCell>
                   <TableCell>
-                    {checkIn.check_out_time
-                      ? formatDateTime(checkIn.check_out_time)
-                      : "-"}
-                  </TableCell>
-                  <TableCell>
-                    {formatDuration(checkIn.duration_minutes)}
-                  </TableCell>
-                  <TableCell>
                     <Badge variant="outline" className="capitalize">
                       {checkIn.check_in_method.replace("_", " ")}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      className={
-                        checkIn.status === "checked_in"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }
-                    >
-                      {checkIn.status === "checked_in" ? "In Building" : "Left"}
                     </Badge>
                   </TableCell>
                 </TableRow>

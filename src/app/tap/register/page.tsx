@@ -195,21 +195,13 @@ function RegisterPageContent() {
         if (activityParam) {
           passkeyCheckinUrl += `&activity=${encodeURIComponent(activityParam)}`;
         }
-        const checkinResponse = await fetch(passkeyCheckinUrl, {
+        await fetch(passkeyCheckinUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "X-Visitor-Token": verifyData.token,
           },
         });
-
-        const checkinData = await checkinResponse.json();
-
-        if (checkinData.action === "checkout") {
-          // User is checking out - redirect to main tap page to show checkout UI
-          router.push(`/tap?loc=${encodeURIComponent(location)}`);
-          return;
-        }
 
         setStep("success");
       } else {
