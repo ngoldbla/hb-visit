@@ -344,7 +344,12 @@ export type Database = {
           name: string
           personality_nickname: string | null
           phone: string | null
+          phone_normalized: string | null
           photo_url: string | null
+          pin_failed_attempts: number | null
+          pin_hash: string | null
+          pin_locked_until: string | null
+          pin_set_at: string | null
           total_check_ins: number | null
         }
         Insert: {
@@ -361,7 +366,12 @@ export type Database = {
           name: string
           personality_nickname?: string | null
           phone?: string | null
+          phone_normalized?: string | null
           photo_url?: string | null
+          pin_failed_attempts?: number | null
+          pin_hash?: string | null
+          pin_locked_until?: string | null
+          pin_set_at?: string | null
           total_check_ins?: number | null
         }
         Update: {
@@ -378,7 +388,12 @@ export type Database = {
           name?: string
           personality_nickname?: string | null
           phone?: string | null
+          phone_normalized?: string | null
           photo_url?: string | null
+          pin_failed_attempts?: number | null
+          pin_hash?: string | null
+          pin_locked_until?: string | null
+          pin_set_at?: string | null
           total_check_ins?: number | null
         }
         Relationships: []
