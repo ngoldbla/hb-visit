@@ -6,10 +6,13 @@ import { AttractCycleManager } from "@/components/kiosk/attract-cycle-manager";
 import { SuccessScreen } from "@/components/kiosk/success-screen";
 import { MemberDirectory } from "@/components/kiosk/member-directory";
 import { MobileExplainer } from "@/components/kiosk/mobile-explainer";
+import { PhoneEntry } from "@/components/kiosk/phone-entry";
+import { PinEntry } from "@/components/kiosk/pin-entry";
+import { KioskRegister } from "@/components/kiosk/kiosk-register";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { createClient } from "@/lib/supabase/client";
 
-type KioskState = "attract" | "celebrating" | "directory";
+type KioskState = "attract" | "celebrating" | "directory" | "phone_entry" | "pin_entry" | "kiosk_register";
 
 interface CelebrationStats {
   monthlyCount: number;
@@ -25,6 +28,13 @@ interface CheckInResult {
   monthlyGoal: number;
 }
 
+interface PhoneLookupData {
+  name: string;
+  avatar_emoji: string | null;
+  member_id: string;
+  phone: string;
+}
+
 export default function KioskPage() {
   const isMobile = useIsMobile();
   const [state, setState] = useState<KioskState>("attract");
@@ -33,6 +43,8 @@ export default function KioskPage() {
     monthlyCount: 0,
     monthlyGoal: 1000,
   });
+  const [phoneLookupData, setPhoneLookupData] = useState<PhoneLookupData | null>(null);
+  const [registerPhone, setRegisterPhone] = useState<string | undefined>();
   const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch celebration stats (for success screen)
@@ -80,10 +92,12 @@ export default function KioskPage() {
     celebrationTimerRef.current = setTimeout(() => {
       setState("attract");
       setCheckInResult(null);
+      setPhoneLookupData(null);
+      setRegisterPhone(undefined);
     }, 6000);
   }, []);
 
-  // Subscribe to real-time check-ins from NFC taps and kiosk directory
+  // Subscribe to real-time check-ins from NFC taps, kiosk directory, and kiosk_pin
   useEffect(() => {
     const supabase = createClient();
 
@@ -97,7 +111,7 @@ export default function KioskPage() {
           table: "check_ins",
         },
         async (payload) => {
-          // Show celebration for NFC token check-ins (directory check-ins handled by onCheckIn callback)
+          // Show celebration for NFC token check-ins (directory and pin check-ins handled by callbacks)
           if (payload.new && payload.new.check_in_method === "nfc_token") {
             // Guard: if already celebrating, ignore incoming events
             if (state === "celebrating") return;
@@ -174,6 +188,56 @@ export default function KioskPage() {
     });
   }, [fetchCelebrationStats, celebrationStats.monthlyCount, celebrationStats.monthlyGoal, showCelebration]);
 
+  // Phone check-in handlers
+  const handlePhoneCheckIn = useCallback(() => {
+    setState("phone_entry");
+  }, []);
+
+  const handlePhoneFound = useCallback((data: { name: string; avatar_emoji: string | null; member_id: string; phone: string }) => {
+    setPhoneLookupData(data);
+    setState("pin_entry");
+  }, []);
+
+  const handlePhoneNotFound = useCallback((phone: string) => {
+    setRegisterPhone(phone);
+    setState("kiosk_register");
+  }, []);
+
+  const handlePinSuccess = useCallback(async (result: { visitorName: string; streak: number; monthlyCount: number; monthlyGoal: number }) => {
+    await fetchCelebrationStats();
+    showCelebration({
+      visitorName: result.visitorName,
+      checkInTime: new Date(),
+      location: "kiosk",
+      streak: result.streak,
+      monthlyCount: result.monthlyCount || celebrationStats.monthlyCount + 1,
+      monthlyGoal: result.monthlyGoal || celebrationStats.monthlyGoal,
+    });
+  }, [fetchCelebrationStats, celebrationStats.monthlyCount, celebrationStats.monthlyGoal, showCelebration]);
+
+  const handleRegisterSuccess = useCallback(async (result: { visitorName: string; streak: number; monthlyCount: number; monthlyGoal: number }) => {
+    await fetchCelebrationStats();
+    showCelebration({
+      visitorName: result.visitorName,
+      checkInTime: new Date(),
+      location: "kiosk",
+      streak: result.streak,
+      monthlyCount: result.monthlyCount || celebrationStats.monthlyCount + 1,
+      monthlyGoal: result.monthlyGoal || celebrationStats.monthlyGoal,
+    });
+  }, [fetchCelebrationStats, celebrationStats.monthlyCount, celebrationStats.monthlyGoal, showCelebration]);
+
+  const handleBackToAttract = useCallback(() => {
+    setState("attract");
+    setPhoneLookupData(null);
+    setRegisterPhone(undefined);
+  }, []);
+
+  const handleBackToPhoneEntry = useCallback(() => {
+    setState("phone_entry");
+    setPhoneLookupData(null);
+  }, []);
+
   // Show mobile explainer on small screens
   if (isMobile) {
     return <MobileExplainer />;
@@ -191,7 +255,10 @@ export default function KioskPage() {
             transition={{ duration: 0.4 }}
             className="w-full h-full"
           >
-            <AttractCycleManager onScreenTap={handleScreenTap} />
+            <AttractCycleManager
+              onScreenTap={handleScreenTap}
+              onPhoneCheckIn={handlePhoneCheckIn}
+            />
           </motion.div>
         )}
 
@@ -207,6 +274,60 @@ export default function KioskPage() {
             <MemberDirectory
               onCheckIn={handleDirectoryCheckIn}
               onClose={handleDirectoryClose}
+            />
+          </motion.div>
+        )}
+
+        {state === "phone_entry" && (
+          <motion.div
+            key="phone_entry"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ duration: 0.3 }}
+            className="w-full h-full"
+          >
+            <PhoneEntry
+              onFound={handlePhoneFound}
+              onNotFound={handlePhoneNotFound}
+              onBack={handleBackToAttract}
+            />
+          </motion.div>
+        )}
+
+        {state === "pin_entry" && phoneLookupData && (
+          <motion.div
+            key="pin_entry"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ duration: 0.3 }}
+            className="w-full h-full"
+          >
+            <PinEntry
+              memberName={phoneLookupData.name}
+              memberEmoji={phoneLookupData.avatar_emoji}
+              memberId={phoneLookupData.member_id}
+              phone={phoneLookupData.phone}
+              onSuccess={handlePinSuccess}
+              onBack={handleBackToPhoneEntry}
+            />
+          </motion.div>
+        )}
+
+        {state === "kiosk_register" && (
+          <motion.div
+            key="kiosk_register"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ duration: 0.3 }}
+            className="w-full h-full"
+          >
+            <KioskRegister
+              initialPhone={registerPhone}
+              onSuccess={handleRegisterSuccess}
+              onBack={handleBackToAttract}
             />
           </motion.div>
         )}

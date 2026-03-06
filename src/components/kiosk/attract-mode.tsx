@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { motion } from "framer-motion";
-import { Flame, HandMetal } from "lucide-react";
+import { Flame, HandMetal, Phone, QrCode, X } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import Image from "next/image";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import { useHolidayTheme, getDefaultTheme } from "@/lib/holidays";
 import { ThemedParticles } from "./themed-particles";
 import { ThemeOverlay } from "./theme-overlay";
-import { EmbeddedQuoteRotator } from "./embedded-quote-rotator";
 import type { Quote } from "./quote-cycle";
 
 // The URL for NFC stickers and registration QR
@@ -27,6 +26,7 @@ interface AttractModeProps {
   stats?: CommunityStats;
   quotes?: Quote[];
   onScreenTap?: () => void;
+  onPhoneCheckIn?: () => void;
 }
 
 // Compact progress ring for the header
@@ -131,7 +131,7 @@ function useAutoScroll(ref: React.RefObject<HTMLDivElement | null>, itemCount: n
   }, [animate]);
 }
 
-export function AttractMode({ stats, quotes, onScreenTap }: AttractModeProps) {
+export function AttractMode({ stats, quotes, onScreenTap, onPhoneCheckIn }: AttractModeProps) {
   useWakeLock();
 
   const theme = useHolidayTheme() || getDefaultTheme();
@@ -149,6 +149,8 @@ export function AttractMode({ stats, quotes, onScreenTap }: AttractModeProps) {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   useAutoScroll(scrollContainerRef, recentCheckIns.length);
+
+  const [showQrModal, setShowQrModal] = useState(false);
 
   return (
     <div className="h-full flex flex-col relative overflow-hidden" style={bgStyle}>
@@ -207,48 +209,58 @@ export function AttractMode({ stats, quotes, onScreenTap }: AttractModeProps) {
 
       {/* Main 2-column layout */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-6 px-8 pb-4 relative z-10 min-h-0">
-        {/* Left column (~40%) - QR + Quote */}
+        {/* Left column (~40%) - Welcome hero + check-in CTAs */}
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="lg:col-span-2 flex flex-col items-center justify-center gap-6"
+          className="lg:col-span-2 flex flex-col items-center justify-center gap-8"
         >
-          {/* QR Code */}
+          {/* Welcome text */}
           <div className="text-center">
-            <motion.div
-              animate={{
-                borderColor: ["rgba(0,0,0,0.1)", `${colors.primary}99`, "rgba(0,0,0,0.1)"],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="w-56 h-56 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-black/10 p-3 border-2"
-            >
-              <QRCodeSVG
-                value={REGISTRATION_URL}
-                size={200}
-                level="M"
-                bgColor="transparent"
-                fgColor={colors.text}
-              />
-            </motion.div>
-            <h2 className="text-3xl font-bold mt-5" style={{ color: colors.text }}>
-              Check In Here
-            </h2>
-            <p className="text-[#333]/50 text-base mt-1">
-              Scan QR code or tap NFC checkpoint
+            <h1 className="text-4xl font-bold mb-3" style={{ color: colors.text }}>
+              Welcome!
+            </h1>
+            <p className="text-[#333]/50 text-lg">
+              Tap your phone or check in below
             </p>
           </div>
 
-          {/* Embedded Quote Rotator */}
-          {quotes && quotes.length > 0 && (
-            <div className="w-full max-w-sm">
-              <EmbeddedQuoteRotator quotes={quotes} />
-            </div>
-          )}
+          {/* Primary CTA: Check In With Phone */}
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={onPhoneCheckIn}
+            className="w-full max-w-xs flex items-center justify-center gap-3 px-8 py-5 rounded-2xl font-bold text-xl shadow-lg transition-colors"
+            style={{
+              background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+              color: colors.text,
+            }}
+          >
+            <Phone className="w-6 h-6" />
+            Check In With Phone
+          </motion.button>
+
+          {/* Secondary CTA: Find Your Name */}
+          <button
+            onClick={onScreenTap}
+            className="flex items-center gap-3 px-6 py-3 rounded-2xl font-semibold text-base transition-colors"
+            style={{
+              backgroundColor: `${colors.primary}20`,
+              color: colors.text,
+            }}
+          >
+            <HandMetal className="w-5 h-5" style={{ color: colors.primary }} />
+            Find Your Name
+          </button>
+
+          {/* Tertiary: QR code icon */}
+          <button
+            onClick={() => setShowQrModal(true)}
+            className="flex items-center gap-2 text-[#333]/40 hover:text-[#333]/60 transition-colors text-sm"
+          >
+            <QrCode className="w-4 h-4" />
+            Scan QR Code
+          </button>
         </motion.div>
 
         {/* Right column (~60%) - Activity Feed */}
@@ -337,28 +349,57 @@ export function AttractMode({ stats, quotes, onScreenTap }: AttractModeProps) {
         </motion.div>
       </div>
 
-      {/* Footer with Check In By Name CTA */}
+      {/* Footer hint */}
       <motion.footer
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="px-8 py-4 flex items-center justify-between relative z-10"
+        className="px-8 py-3 flex items-center justify-center relative z-10"
       >
-        <button
-          onClick={onScreenTap}
-          className="flex items-center gap-3 px-6 py-3 rounded-2xl font-semibold text-base transition-colors touch-auto"
-          style={{
-            backgroundColor: `${colors.primary}20`,
-            color: colors.text,
-          }}
-        >
-          <HandMetal className="w-5 h-5" style={{ color: colors.primary }} />
-          Check In By Name
-        </button>
         <p className="text-[#333]/30 text-sm">
-          Scan QR &middot; Tap NFC
+          Tap NFC checkpoint with your phone for instant check-in
         </p>
       </motion.footer>
+
+      {/* QR Code Modal */}
+      {showQrModal && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setShowQrModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl p-8 shadow-2xl max-w-sm mx-4 text-center"
+          >
+            <div className="flex justify-end mb-2">
+              <button
+                onClick={() => setShowQrModal(false)}
+                className="text-[#333]/40 hover:text-[#333] transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="w-56 h-56 mx-auto mb-4">
+              <QRCodeSVG
+                value={REGISTRATION_URL}
+                size={224}
+                level="M"
+                bgColor="transparent"
+                fgColor={colors.text}
+              />
+            </div>
+            <h3 className="text-xl font-bold text-[#000824] mb-1">
+              Scan to Register
+            </h3>
+            <p className="text-[#333]/50 text-sm">
+              Use your phone&apos;s camera to scan this QR code
+            </p>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

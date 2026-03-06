@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createDeviceToken } from "@/lib/auth/tokens";
 import { createClient } from "@/lib/supabase/server";
 import { validateName } from "@/lib/validation/name-moderation";
+import { normalizePhone } from "@/lib/phone/normalize";
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,19 +65,51 @@ export async function POST(request: NextRequest) {
         })
         .eq("id", existingMember.id);
     } else {
-      // Create new member
-      await supabase
-        .from("members")
-        .insert({
-          email: normalizedEmail,
-          name: trimmedName,
-          phone: phone || null,
-          company: company || null,
-          avatar_emoji: avatarEmoji || "😊",
-          current_streak: 0,
-          longest_streak: 0,
-          total_check_ins: 0,
-        });
+      // Identity reunification: check if a kiosk-registered member exists with matching phone
+      let phoneMember = null;
+      if (phone) {
+        const normalized = normalizePhone(phone);
+        if (normalized) {
+          const { data } = await supabase
+            .from("members")
+            .select("id, email")
+            .eq("phone_normalized", normalized)
+            .single();
+          if (data && data.email?.endsWith("@kiosk.local")) {
+            phoneMember = data;
+          }
+        }
+      }
+
+      if (phoneMember) {
+        // Reunify: upgrade the kiosk-registered member with the real email
+        await supabase
+          .from("members")
+          .update({
+            email: normalizedEmail,
+            name: trimmedName,
+            phone: phone || null,
+            company: company || null,
+            avatar_emoji: avatarEmoji || "😊",
+          })
+          .eq("id", phoneMember.id);
+      } else {
+        // Create new member
+        const normalizedMemberPhone = phone ? normalizePhone(phone) : null;
+        await supabase
+          .from("members")
+          .insert({
+            email: normalizedEmail,
+            name: trimmedName,
+            phone: phone || null,
+            phone_normalized: normalizedMemberPhone,
+            company: company || null,
+            avatar_emoji: avatarEmoji || "😊",
+            current_streak: 0,
+            longest_streak: 0,
+            total_check_ins: 0,
+          });
+      }
     }
 
     return NextResponse.json({

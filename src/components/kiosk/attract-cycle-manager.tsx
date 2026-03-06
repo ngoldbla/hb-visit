@@ -14,9 +14,10 @@ interface CommunityStats {
 
 interface AttractCycleManagerProps {
   onScreenTap?: () => void;
+  onPhoneCheckIn?: () => void;
 }
 
-export function AttractCycleManager({ onScreenTap }: AttractCycleManagerProps) {
+export function AttractCycleManager({ onScreenTap, onPhoneCheckIn }: AttractCycleManagerProps) {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [communityStats, setCommunityStats] = useState<CommunityStats>({
     monthlyCount: 0,
@@ -111,6 +112,7 @@ export function AttractCycleManager({ onScreenTap }: AttractCycleManagerProps) {
       stats={communityStats}
       quotes={quotes}
       onScreenTap={onScreenTap}
+      onPhoneCheckIn={onPhoneCheckIn}
     />
   );
 }
